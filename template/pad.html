@@ -343,7 +343,7 @@
 
         <div id="focusprotector">&nbsp;</div>
 
-        <script type="text/javascript" src="../static/js/require-kernel.js"></script>
+        <!-- <script type="text/javascript" src="../static/js/require-kernel.js"></script> -->
 
         <!-- Include pad_utils manually -->
         <script type="text/javascript" src="../static/js/pad_utils.js?callback=require.define"></script>
@@ -366,7 +366,7 @@
             // @license-end
         </script>
 
-        <script type="text/javascript" src="../socket.io/socket.io.js"></script>
+        <script type="text/javascript" src="../static/socket.io/socket.io.js"></script>
 
         <!-- Include base packages manually (this help with debugging) -->
         <script type="text/javascript" src="../static/js/pad.js?callback=require.define"></script>
@@ -385,12 +385,12 @@
 
               // Strip 'p' and the padname from the pathname and set as baseURL
               var baseURL = pathComponents.slice(0,pathComponents.length-2).join('/') + '/';
-
+              console.Log(baseURL);
               require.setRootURI(baseURL + "javascripts/src");
               require.setLibraryURI(baseURL + "javascripts/lib");
               require.setGlobalKeyPath("require");
 
-              $ = jQuery = require('ep_etherpad-lite/static/js/rjquery').jQuery; // Expose jQuery #HACK
+              $ = jQuery = require('static/js/rjquery').jQuery; // Expose jQuery #HACK
               browser = require('ep_etherpad-lite/static/js/browser');
 
               var plugins = require('ep_etherpad-lite/static/js/pluginfw/client_plugins');
