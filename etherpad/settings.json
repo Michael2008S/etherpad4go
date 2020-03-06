@@ -86,7 +86,7 @@
    * IP and port which etherpad should bind at
    */
   "ip": "127.0.0.1",
-  "port": 9001,
+  "port": 9011,
 
   /*
    * Option to hide/show the settings.json in admin page.
