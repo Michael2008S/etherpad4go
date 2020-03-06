@@ -1,0 +1,28 @@
+{
+  "name": "etherpad",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node node/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^3.2.0",
+    "express": "^4.17.1",
+    "find-root": "^1.1.0",
+    "graceful-fs": "^4.2.2",
+    "jsonminify": "^0.4.1",
+    "log4js": "^0.6.35",
+    "measured-core": "^1.51.1",
+    "npm": "^6.14.2",
+    "slide": "^1.1.6",
+    "ueberdb2": "^0.4.0",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.8.7"
+  }
+}
