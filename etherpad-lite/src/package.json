@@ -1,0 +1,21 @@
+{
+  "name": "etherpad-lite",
+  "version": "1.0.0",
+  "description": "my customer etherpad",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "find-root": "^1.1.0",
+    "graceful-fs": "^4.2.2",
+    "jsonminify": "^0.4.1",
+    "log4js": "^0.6.35",
+    "npm": "^6.14.2",
+    "slide": "^1.1.6",
+    "ueberdb2": "^0.4.0",
+    "underscore": "^1.8.3"
+  }
+}
