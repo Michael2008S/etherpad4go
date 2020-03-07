@@ -9,6 +9,7 @@ var _ = require("underscore");
 var speciapage = require("./express/specialpages");
 var staticSrv = require("./express/static");
 var i18nSrv = require("./i18n");
+var socketioSrv = require("./express/socketio")
 
 var server;
 var serverName;
@@ -105,7 +106,8 @@ exports.restartServer = function () {
     // hooks.callAll("expressCreateServer", {"app": app, "server": server});
     speciapage.expressCreateServer("", {"app": app, "server": server});
     staticSrv.expressCreateStaticServer("", {"app": app, "server": server});
-    i18nSrv.expressCreatei18nServer("", {"app": app, "server": server})
+    i18nSrv.expressCreatei18nServer("", {"app": app, "server": server});
+    socketioSrv.expressCreateSocketioServer("", {"app": app, "server": server});
 
     server.listen(settings.port, settings.ip);
 }

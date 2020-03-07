@@ -1,3 +1,0 @@
-require.define({
-  "/static/js/rjquery/index.js": null
-});
