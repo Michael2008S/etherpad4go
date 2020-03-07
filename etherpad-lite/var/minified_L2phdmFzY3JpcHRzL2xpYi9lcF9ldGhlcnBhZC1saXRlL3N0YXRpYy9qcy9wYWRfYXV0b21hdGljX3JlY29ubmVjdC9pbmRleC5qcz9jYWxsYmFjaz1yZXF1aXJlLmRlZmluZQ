@@ -1,3 +1,0 @@
-require.define({
-  "ep_etherpad-lite/static/js/pad_automatic_reconnect/index.js": null
-});

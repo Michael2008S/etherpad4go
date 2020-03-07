@@ -20,6 +20,7 @@
     "slide": "^1.1.6",
     "tinycon": "^0.6.8",
     "ueberdb2": "^0.4.0",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "unorm": "^1.6.0"
   }
 }
