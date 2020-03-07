@@ -7,6 +7,7 @@
     { "name": "static", "hooks": { "expressCreateServer": "ep_etherpad-lite/node/hooks/express/static:expressCreateServer" } },
     { "name": "i18n", "hooks": { "expressCreateServer": "ep_etherpad-lite/node/hooks/i18n:expressCreateServer" } },
     { "name": "specialpages", "hooks": { "expressCreateServer": "ep_etherpad-lite/node/hooks/express/specialpages:expressCreateServer" } },
+    { "name": "socketio", "hooks": { "expressCreateServer": "ep_etherpad-lite/node/hooks/express/socketio:expressCreateServer" } },
     { "name": "swagger", "hooks": { "expressCreateServer": "ep_etherpad-lite/node/hooks/express/swagger:expressCreateServer" } }
   ]
 }
