@@ -7,6 +7,8 @@ var npm = require("npm/lib/npm.js");
 var _ = require("underscore");
 
 var speciapage = require("./express/specialpages");
+var staticSrv = require("./express/static");
+var i18nSrv = require("./i18n");
 
 var server;
 var serverName;
@@ -99,8 +101,11 @@ exports.restartServer = function () {
         app.enable('trust proxy');
     }
 
-    hooks.callAll("expressConfigure", {"app": app});
-    hooks.callAll("expressCreateServer", {"app": app, "server": server});
+    // hooks.callAll("expressConfigure", {"app": app});
+    // hooks.callAll("expressCreateServer", {"app": app, "server": server});
     speciapage.expressCreateServer("", {"app": app, "server": server});
+    staticSrv.expressCreateStaticServer("", {"app": app, "server": server});
+    i18nSrv.expressCreatei18nServer("", {"app": app, "server": server})
+
     server.listen(settings.port, settings.ip);
 }

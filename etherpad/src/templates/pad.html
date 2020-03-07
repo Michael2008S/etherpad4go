@@ -408,11 +408,11 @@
               require.setLibraryURI(baseURL + "javascripts/lib");
               require.setGlobalKeyPath("require");
 
-              $ = jQuery = require('ep_etherpad-lite/static/js/rjquery').jQuery; // Expose jQuery #HACK
-              browser = require('ep_etherpad-lite/static/js/browser');
+              $ = jQuery = require('../static/js/rjquery').jQuery; // Expose jQuery #HACK
+              browser = require('../../static/js/browser');
 
-              var plugins = require('ep_etherpad-lite/static/js/pluginfw/client_plugins');
-              var hooks = require('ep_etherpad-lite/static/js/pluginfw/hooks');
+              var plugins = require('../../static/js/pluginfw/client_plugins');
+              var hooks = require('../../static/js/pluginfw/hooks');
 
               plugins.baseURL = baseURL;
               plugins.update(function () {
@@ -423,7 +423,7 @@
                   hooks.aCallAll('documentReady');
                 });
 
-                var pad = require('ep_etherpad-lite/static/js/pad');
+                var pad = require('../../static/js/pad');
                 pad.baseURL = baseURL;
                 pad.init();
               });
