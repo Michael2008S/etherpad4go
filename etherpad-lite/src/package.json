@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cookie-parser": "^1.4.4",
     "express-session": "^1.17.0",
     "find-root": "^1.1.0",
     "graceful-fs": "^4.2.2",
