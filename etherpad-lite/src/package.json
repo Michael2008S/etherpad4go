@@ -14,7 +14,9 @@
     "jsonminify": "^0.4.1",
     "log4js": "^0.6.35",
     "npm": "^6.14.2",
+    "security": "^1.0.0",
     "slide": "^1.1.6",
+    "tinycon": "^0.6.8",
     "ueberdb2": "^0.4.0",
     "underscore": "^1.8.3"
   }
