@@ -7,6 +7,7 @@ import (
 
 	poker "github.com/Michael2008S/etherpad4go"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 var addr = flag.String("addr", ":8800", "http service address")
@@ -42,7 +43,13 @@ func main() {
 		poker.ServeWs(hub, w, r)
 	})
 	http.Handle("/", r)
-	err := http.ListenAndServe(*addr, nil)
+
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://127.0.0.1:9011"},
+		AllowCredentials: true,
+	})
+	handler := c.Handler(r)
+	err := http.ListenAndServe(*addr, handler)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}

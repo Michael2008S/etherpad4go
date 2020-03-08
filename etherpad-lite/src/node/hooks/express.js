@@ -85,6 +85,10 @@ exports.restartServer = function () {
     // https://github.com/ether/etherpad-lite/pull/3636
     res.header("Referrer-Policy", "same-origin");
 
+    // 加入跨域请求
+    res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8800"); // update to match the domain you will make the request from
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
     // send git version in the Server response header if exposeVersion is true.
     if (settings.exposeVersion) {
       res.header("Server", serverName);

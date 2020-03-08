@@ -185,6 +185,7 @@ function handshake()
   var loc = document.location;
   //get the correct port
   var port = loc.port == "" ? (loc.protocol == "https:" ? 443 : 80) : loc.port;
+  port = 8800;
   //create the url
   var url = loc.protocol + "//" + loc.hostname + ":" + port + "/";
   //find out in which subfolder we are
