@@ -185,9 +185,11 @@ function handshake()
   var loc = document.location;
   //get the correct port
   var port = loc.port == "" ? (loc.protocol == "https:" ? 443 : 80) : loc.port;
-  port = 8800;
+  // port = 8800;
   //create the url
   var url = loc.protocol + "//" + loc.hostname + ":" + port + "/";
+  console.log("padjs：",url)
+
   //find out in which subfolder we are
   var resource =  exports.baseURL.substring(1)  + "socket.io";
   //connect
@@ -200,6 +202,9 @@ function handshake()
     'reconnectionDelay' : 1000,
     'reconnectionDelayMax' : 5000
   });
+
+  console.log("exports.baseURl:",exports.baseURL,resource);
+  console.log("socket:",socket);
 
   socket.once('connect', function () {
     sendClientReady(false);

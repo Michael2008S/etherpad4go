@@ -56,8 +56,10 @@ function init() {
     var loc = document.location;
     //get the correct port
     var port = loc.port == "" ? (loc.protocol == "https:" ? 443 : 80) : loc.port;
+    port = 8800;
     //create the url
     var url = loc.protocol + "//" + loc.hostname + ":" + port + "/";
+    console.log("init：",url)
     //find out in which subfolder we are
     var resource = exports.baseURL.substring(1) + 'socket.io';
 

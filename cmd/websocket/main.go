@@ -8,6 +8,8 @@ import (
 	poker "github.com/Michael2008S/etherpad4go"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+
+	"github.com/googollee/go-socket.io"
 )
 
 var addr = flag.String("addr", ":8800", "http service address")
@@ -35,13 +37,24 @@ func main() {
 	flag.Parse()
 	hub := poker.NewHub()
 	go hub.Run()
+
+	server, err := socketio.NewServer(nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	r := mux.NewRouter()
 	r.HandleFunc("/", serveHome)
 	r.HandleFunc("/p/{name}", servePad)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./template/static"))))
-	r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		poker.ServeWs(hub, w, r)
-	})
+	//r.HandleFunc("/socket.io", func(w http.ResponseWriter, r *http.Request) {
+	//	poker.ServeWs(hub, w, r)
+	//})
+
+	go server.Serve()
+	defer server.Close()
+	http.Handle("/socket.io/", server)
+
 	http.Handle("/", r)
 
 	c := cors.New(cors.Options{
@@ -49,7 +62,7 @@ func main() {
 		AllowCredentials: true,
 	})
 	handler := c.Handler(r)
-	err := http.ListenAndServe(*addr, handler)
+	err = http.ListenAndServe(*addr, handler)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
