@@ -181,7 +181,159 @@ function sendClientReady(isReconnect, messageType)
 }
 
 function handshakeNew(){
+  var loc = document.location;
+  var port = loc.port == "" ? (loc.protocol == "https:" ? 443 : 80) : loc.port;
+  port = 8800;
+  var url = "ws" + "://" + loc.hostname + ":" + port + "/ws";
+  let socket = pad.socket = new WebSocket(url);
+  socket.onopen = () => {
+    console.log("Successfully Connected");
+    socket.send("Hi From the Client!");
+    sendClientReady(false);
+  };
 
+  socket.onclose = event => {
+    console.log("Socket Closed Connection: ", event);
+    socket.send("Client Closed!")
+  };
+
+  socket.onerror = error => {
+    console.log("Socket Error: ", error);
+    pad.collabClient.setStateIdle();
+    pad.collabClient.setIsPendingRevision(true);
+  };
+
+  var initalized = false;
+  socket.onmessage = function(obj)
+  {
+    //the access was not granted, give the user a message
+    if(obj.accessStatus)
+    {
+      if(!receivedClientVars){
+        $('.passForm').submit(require(module.id).savePassword);
+      }
+
+      if(obj.accessStatus == "deny")
+      {
+        $('#loading').hide();
+        $("#permissionDenied").show();
+
+        if(receivedClientVars)
+        {
+          // got kicked
+          $("#editorcontainer").hide();
+          $("#editorloadingbox").show();
+        }
+      }
+      else if(obj.accessStatus == "needPassword")
+      {
+        $('#loading').hide();
+        $('#passwordRequired').show();
+        $("#passwordinput").focus();
+      }
+      else if(obj.accessStatus == "wrongPassword")
+      {
+        $('#loading').hide();
+        $('#wrongPassword').show();
+        $('#passwordRequired').show();
+        $("#passwordinput").focus();
+      }
+    }
+
+    //if we haven't recieved the clientVars yet, then this message should it be
+    else if (!receivedClientVars && obj.type == "CLIENT_VARS")
+    {
+      //log the message
+      if (window.console) console.log(obj);
+
+      receivedClientVars = true;
+
+      //set some client vars
+      clientVars = obj.data;
+      clientVars.userAgent = "Anonymous";
+      clientVars.collab_client_vars.clientAgent = "Anonymous";
+
+      //initalize the pad
+      pad._afterHandshake();
+      initalized = true;
+
+      if(clientVars.readonly){
+        chat.hide();
+        $('#myusernameedit').attr("disabled", true);
+        $('#chatinput').attr("disabled", true);
+        $('#chaticon').hide();
+        $('#options-chatandusers').parent().hide();
+        $('#options-stickychat').parent().hide();
+      }
+
+      $("body").addClass(clientVars.readonly ? "readonly" : "readwrite")
+
+      padeditor.ace.callWithAce(function (ace) {
+        ace.ace_setEditable(!clientVars.readonly);
+      });
+
+      // If the LineNumbersDisabled value is set to true then we need to hide the Line Numbers
+      if (settings.LineNumbersDisabled == true)
+      {
+        pad.changeViewOption('showLineNumbers', false);
+      }
+
+      // If the noColors value is set to true then we need to hide the background colors on the ace spans
+      if (settings.noColors == true)
+      {
+        pad.changeViewOption('noColors', true);
+      }
+
+      if (settings.rtlIsTrue == true)
+      {
+        pad.changeViewOption('rtlIsTrue', true);
+      }
+
+      // If the Monospacefont value is set to true then change it to monospace.
+      if (settings.useMonospaceFontGlobal == true)
+      {
+        pad.changeViewOption('padFontFamily', 'monospace');
+      }
+      // if the globalUserName value is set we need to tell the server and the client about the new authorname
+      if (settings.globalUserName !== false)
+      {
+        pad.notifyChangeName(settings.globalUserName); // Notifies the server
+        pad.myUserInfo.name = settings.globalUserName;
+        $('#myusernameedit').val(settings.globalUserName); // Updates the current users UI
+      }
+      if (settings.globalUserColor !== false && colorutils.isCssHex(settings.globalUserColor))
+      {
+
+        // Add a 'globalUserColor' property to myUserInfo, so collabClient knows we have a query parameter.
+        pad.myUserInfo.globalUserColor = settings.globalUserColor;
+        pad.notifyChangeColor(settings.globalUserColor); // Updates pad.myUserInfo.colorId
+        paduserlist.setMyUserInfo(pad.myUserInfo);
+      }
+    }
+    //This handles every Message after the clientVars
+    else
+    {
+      //this message advices the client to disconnect
+      if (obj.disconnect)
+      {
+        console.warn("FORCED TO DISCONNECT");
+        console.warn(obj);
+        padconnectionstatus.disconnected(obj.disconnect);
+        socket.disconnect();
+
+        // block user from making any change to the pad
+        padeditor.disable();
+        padeditbar.disable();
+        padimpexp.disable();
+
+        return;
+      }
+      else
+      {
+        pad.collabClient.handleMessageFromServer(obj);
+      }
+    }
+  };
 }
 
 function handshake()
@@ -471,7 +623,8 @@ var pad = {
     {
       // start the custom js
       if (typeof customStart == "function") customStart();
-      handshake();
+      // handshake();
+      handshakeNew();
 
       // To use etherpad you have to allow cookies.
       // This will check if the prefs-cookie is set.
