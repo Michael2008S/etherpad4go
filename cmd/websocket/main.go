@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -10,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
-	socketio "github.com/googollee/go-socket.io"
+	//socketio "github.com/googollee/go-socket.io"
 )
 
 var addr = flag.String("addr", ":8800", "http service address")
@@ -39,28 +38,28 @@ func main() {
 	hub := poker.NewHub()
 	go hub.Run()
 
-	server, err := socketio.NewServer(nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	server.OnConnect("/", func(s socketio.Conn) error {
-		s.SetContext("")
-		fmt.Println("connected:", s.ID())
-		return nil
-	})
+	//server, err := socketio.NewServer(nil)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//
+	//server.OnConnect("/", func(s socketio.Conn) error {
+	//	s.SetContext("")
+	//	fmt.Println("connected:", s.ID())
+	//	return nil
+	//})
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", serveHome)
 	r.HandleFunc("/p/{name}", servePad)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./template/static"))))
-	//r.HandleFunc("/socket.io", func(w http.ResponseWriter, r *http.Request) {
-	//	poker.ServeWs(hub, w, r)
-	//})
+	r.HandleFunc("/socket.io", func(w http.ResponseWriter, r *http.Request) {
+		poker.ServeWs(hub, w, r)
+	})
 
-	go server.Serve()
-	defer server.Close()
-	http.Handle("/socket.io/", server)
+	//go server.Serve()
+	//defer server.Close()
+	//http.Handle("/socket.io/", server)
 
 	http.Handle("/test", r)
 
@@ -69,7 +68,7 @@ func main() {
 		AllowCredentials: true,
 	})
 	handler := c.Handler(r)
-	err = http.ListenAndServe(*addr, handler)
+	err := http.ListenAndServe(*addr, handler)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
