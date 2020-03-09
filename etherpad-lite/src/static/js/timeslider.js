@@ -65,7 +65,7 @@ function init() {
 
     //build up the socket io connection
     socket = io.connect(url, {path: exports.baseURL + 'socket.io', resource: resource});
-
+    console.log("timesliderjs--:",resource,socket);
     //send the ready message once we're connected
     socket.on('connect', function()
     {

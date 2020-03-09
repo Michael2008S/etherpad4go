@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
-	"github.com/googollee/go-socket.io"
+	socketio "github.com/googollee/go-socket.io"
 )
 
 var addr = flag.String("addr", ":8800", "http service address")
@@ -43,6 +44,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	server.OnConnect("/", func(s socketio.Conn) error {
+		s.SetContext("")
+		fmt.Println("connected:", s.ID())
+		return nil
+	})
+
 	r := mux.NewRouter()
 	r.HandleFunc("/", serveHome)
 	r.HandleFunc("/p/{name}", servePad)
@@ -55,7 +62,7 @@ func main() {
 	defer server.Close()
 	http.Handle("/socket.io/", server)
 
-	http.Handle("/", r)
+	http.Handle("/test", r)
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://127.0.0.1:9011"},

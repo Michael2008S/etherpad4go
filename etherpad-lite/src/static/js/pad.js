@@ -180,6 +180,10 @@ function sendClientReady(isReconnect, messageType)
   socket.json.send(msg);
 }
 
+function handshakeNew(){
+
+}
+
 function handshake()
 {
   var loc = document.location;
@@ -188,7 +192,6 @@ function handshake()
   // port = 8800;
   //create the url
   var url = loc.protocol + "//" + loc.hostname + ":" + port + "/";
-  console.log("padjs：",url)
 
   //find out in which subfolder we are
   var resource =  exports.baseURL.substring(1)  + "socket.io";
@@ -202,9 +205,11 @@ function handshake()
     'reconnectionDelay' : 1000,
     'reconnectionDelayMax' : 5000
   });
+  // socket = pad.socket = io(url+"socket.io/");
+  console.log("padjs--：",url)
 
   console.log("exports.baseURl:",exports.baseURL,resource);
-  console.log("socket:",socket);
+  console.log("socket:", socket.path, socket.resource, socket);
 
   socket.once('connect', function () {
     sendClientReady(false);

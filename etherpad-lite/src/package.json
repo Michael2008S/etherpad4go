@@ -22,7 +22,7 @@
     "npm": "^6.14.2",
     "security": "^1.0.0",
     "slide": "^1.1.6",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.1.1",
     "tinycon": "^0.6.8",
     "ueberdb2": "^0.4.0",
     "underscore": "^1.8.3",
