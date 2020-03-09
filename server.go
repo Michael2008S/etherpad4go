@@ -2,6 +2,7 @@ package poker
 
 import (
 	"bytes"
+	"github.com/y0ssar1an/q"
 	"log"
 	"net/http"
 	"time"
@@ -89,6 +90,7 @@ func (c *Client) readPump() {
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
 		_, message, err := c.conn.ReadMessage()
+		q.Q("readPump_message:", string(message))
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
@@ -96,6 +98,7 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		q.Q("readPump_message_TrimSpace:", string(message))
 		c.hub.broadcast <- message
 	}
 }

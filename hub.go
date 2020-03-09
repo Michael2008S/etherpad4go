@@ -1,5 +1,7 @@
 package poker
 
+import "github.com/y0ssar1an/q"
+
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
@@ -36,9 +38,31 @@ func (h *Hub) Run() {
 				close(client.send)
 			}
 		case message := <-h.broadcast:
+
+			// 消息判断分发处理
+			q.Q("Run_broadcast:", string(message))
+
+			newMsg := `
+{
+  type: 'COLLABROOM',
+  data: {
+    type: 'USER_NEWINFO',
+    userInfo: {
+      ip: '127.0.0.1',
+      colorId: 36,
+      userAgent: 'Anonymous',
+      userId: 'a.Py0WdSkbof4tM4DD'
+    }
+  }
+}
+
+`
+
+			responseMsg := []byte(newMsg)
+
 			for client := range h.clients {
 				select {
-				case client.send <- message:
+				case client.send <- responseMsg:
 				default:
 					close(client.send)
 					delete(h.clients, client)

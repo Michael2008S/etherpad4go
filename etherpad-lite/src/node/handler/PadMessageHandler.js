@@ -907,7 +907,7 @@ async function handleClientReady(client, message)
   // FIXME: Allow to override readwrite access with readonly
   let statusObject = await securityManager.checkAccess(padIds.padId, message.sessionID, message.token, message.password);
   let accessStatus = statusObject.accessStatus;
-
+  console.log("statusObject:", statusObject)
   // no access, send the client a message that tells him why
   if (accessStatus !== "grant") {
     client.json.send({ accessStatus });
@@ -1035,6 +1035,8 @@ async function handleClientReady(client, message)
                              author: changesets[r]['author'],
                              currentTime: changesets[r]['timestamp']
                            }};
+
+      console.log("wireMsg:", wireMsg);
       client.json.send(wireMsg);
     }
 
@@ -1044,6 +1046,7 @@ async function handleClientReady(client, message)
                          noChanges: true,
                          newRev: pad.getHeadRevisionNumber()
                  }};
+      console.log("Msg:", Msg);
       client.json.send(Msg);
     }
 
@@ -1165,6 +1168,8 @@ async function handleClientReady(client, message)
     if (authorName != null) {
       messageToTheOtherUsers.data.userInfo.name = authorName;
     }
+
+    console.log("messageToTheOtherUsers:", messageToTheOtherUsers);
 
     // notify all existing users about new user
     client.broadcast.to(padIds.padId).json.send(messageToTheOtherUsers);

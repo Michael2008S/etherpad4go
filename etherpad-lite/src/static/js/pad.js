@@ -176,8 +176,10 @@ function sendClientReady(isReconnect, messageType)
     msg.client_rev=pad.collabClient.getCurrentRevisionNumber();
     msg.reconnect=true;
   }
+  console.log("sendClientReady:", msg);
 
-  socket.json.send(msg);
+  // socket.json.send(msg);
+  socket.send(JSON.stringify(msg));
 }
 
 function handshakeNew(){
@@ -185,10 +187,9 @@ function handshakeNew(){
   var port = loc.port == "" ? (loc.protocol == "https:" ? 443 : 80) : loc.port;
   port = 8800;
   var url = "ws" + "://" + loc.hostname + ":" + port + "/ws";
-  let socket = pad.socket = new WebSocket(url);
+  socket = pad.socket = new WebSocket(url);
   socket.onopen = () => {
     console.log("Successfully Connected");
-    socket.send("Hi From the Client!");
     sendClientReady(false);
   };
 
@@ -206,6 +207,9 @@ function handshakeNew(){
   var initalized = false;
   socket.onmessage = function(obj)
   {
+
+    console.log("socket.onmessage:", obj);
+
     //the access was not granted, give the user a message
     if(obj.accessStatus)
     {
@@ -330,6 +334,7 @@ function handshakeNew(){
       }
       else
       {
+        console.log("handleMessageFromServer:",obj);
         pad.collabClient.handleMessageFromServer(obj);
       }
     }

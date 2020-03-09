@@ -8,4 +8,5 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/websocket v1.4.1
 	github.com/rs/cors v1.7.0
+	github.com/y0ssar1an/q v1.0.9
 )

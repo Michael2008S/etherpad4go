@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
+	"github.com/y0ssar1an/q"
 	//socketio "github.com/googollee/go-socket.io"
 )
 
@@ -66,7 +67,9 @@ func reader(conn *websocket.Conn) {
 			return
 		}
 		// print out that message for clarity
-		log.Println(string(p))
+		log.Println("message_type:")
+		log.Println(messageType, string(p))
+		q.Q(string(p))
 
 		if err := conn.WriteMessage(messageType, p); err != nil {
 			log.Println(err)
@@ -81,16 +84,6 @@ func main() {
 	hub := poker.NewHub()
 	go hub.Run()
 
-	//server, err := socketio.NewServer(nil)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//
-	//server.OnConnect("/", func(s socketio.Conn) error {
-	//	s.SetContext("")
-	//	fmt.Println("connected:", s.ID())
-	//	return nil
-	//})
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", serveHome)
@@ -100,11 +93,11 @@ func main() {
 		poker.ServeWs(hub, w, r)
 	})
 
-	r.HandleFunc("/ws", wsEndpoint)
+	r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		poker.ServeWs(hub, w, r)
+	})
 
-	//go server.Serve()
-	//defer server.Close()
-	//http.Handle("/socket.io/", server)
+	//r.HandleFunc("/ws", wsEndpoint)
 
 	http.Handle("/test", r)
 
