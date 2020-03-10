@@ -1,6 +1,7 @@
 package poker
 
 import "github.com/y0ssar1an/q"
+import "github.com/thedevsaddam/gojsonq"
 
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
@@ -70,4 +71,28 @@ func (h *Hub) Run() {
 			}
 		}
 	}
+}
+
+func handleMessage(message []byte) {
+	msgType := gojsonq.New().FromString(string(message)).Find("type")
+	//
+	//accessStatus =  securityManager.checkAccess(padID, sessionCookie, token, password)
+
+	//if (accessStatus !== "grant") {
+	//
+	//}
+
+	if msgType.(string) == "CLIENT_READY" {
+		//	handleClientReady(client, message);
+	} else if msgType.(string) == "CHANGESET_REQ" {
+		//	handleChangesetRequest(client, message);
+	}
+}
+
+func handleClientReady() {
+
+}
+
+func handleChangesetRequest() {
+
 }
