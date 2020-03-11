@@ -10,6 +10,6 @@ require (
 	github.com/gorilla/websocket v1.4.1
 	github.com/rs/cors v1.7.0
 	github.com/stretchr/testify v1.4.0
-	github.com/thedevsaddam/gojsonq v2.3.0+incompatible // indirect
+	github.com/thedevsaddam/gojsonq v2.3.0+incompatible
 	github.com/y0ssar1an/q v1.0.9
 )

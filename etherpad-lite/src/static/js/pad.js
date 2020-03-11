@@ -208,7 +208,7 @@ function handshakeNew(){
   socket.onmessage = function(obj)
   {
 
-    console.log("socket.onmessage:", obj);
+    console.log("handshake_new_on_message:",obj);
 
     //the access was not granted, give the user a message
     if(obj.accessStatus)
@@ -396,6 +396,7 @@ function handshake()
 
   socket.on('message', function(obj)
   {
+    console.log("handshake_on_message:",obj);
     //the access was not granted, give the user a message
     if(obj.accessStatus)
     {
@@ -520,6 +521,7 @@ function handshake()
       }
       else
       {
+        console.log("handleMessageFromServer_handshake:")
         pad.collabClient.handleMessageFromServer(obj);
       }
     }
