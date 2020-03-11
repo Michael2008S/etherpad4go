@@ -299,7 +299,7 @@ function capitalise(string){
 for (var resource in API) {
   for (var func in API[resource]) {
 
-    // The base response model
+    // The base response store
     var responseModel = {
       "properties": {
         "code":{
@@ -330,7 +330,7 @@ for (var resource in API) {
     // Add this to the swagger models
     swaggerModels['models'][responseModelId] = responseModel;
 
-    // Store the response model id
+    // Store the response store id
     API[resource][func]["responseClass"] = responseModelId;
 
   }
