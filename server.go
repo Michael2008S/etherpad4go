@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/Michael2008S/etherpad4go/api"
 	"github.com/Michael2008S/etherpad4go/model"
+	bgStore "github.com/Michael2008S/etherpad4go/store"
 	"github.com/y0ssar1an/q"
 	"log"
 	"net/http"
@@ -13,9 +14,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type PlayServer struct {
-	http.Handler
-}
+//type PlayServer struct {
+//	http.Handler
+//}
 
 // func NewPlayerServer() (*PlayServer, error) {
 // 	p := new(PlayServer)
@@ -33,20 +34,20 @@ var wsUpgrader = websocket.Upgrader{
 	},
 }
 
-func (p *PlayServer) webSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
-	conn, err := wsUpgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
-	client.hub.register <- client
-
-	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
-	go client.writePump()
-	go client.readPump()
-}
+//func (p *PlayServer) webSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
+//	conn, err := wsUpgrader.Upgrade(w, r, nil)
+//	if err != nil {
+//		log.Println(err)
+//		return
+//	}
+//	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+//	client.hub.register <- client
+//
+//	// Allow collection of memory referenced by the caller by doing all work in
+//	// new goroutines.
+//	go client.writePump()
+//	go client.readPump()
+//}
 
 const (
 	// Time allowed to write a message to the peer.
@@ -71,6 +72,9 @@ type Client struct {
 
 	// Buffered channel of outbound messages.
 	send chan []byte
+
+	// 存储层
+	dbStore bgStore.Store
 }
 
 var (
@@ -153,7 +157,7 @@ func (c *Client) writePump() {
 }
 
 // serveWs handles websocket requests from the peer.
-func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, dbStore bgStore.Store) {
 	conn, err := wsUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -161,6 +165,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client
+	client.dbStore = dbStore
 
 	// 发送 CLIENT_VARS 数据
 	sendClientVars(conn)

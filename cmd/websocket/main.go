@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	bgStore "github.com/Michael2008S/etherpad4go/store"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
@@ -10,7 +11,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
-	"github.com/y0ssar1an/q"
 	//socketio "github.com/googollee/go-socket.io"
 )
 
@@ -41,60 +41,28 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-func wsEndpoint(w http.ResponseWriter, r *http.Request) {
-	// upgrade this connection to a WebSocket
-	// connection
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-	}
-
-	log.Println("Client Connected")
-	err = ws.WriteMessage(1, []byte("Hi Client!"))
-	if err != nil {
-		log.Println(err)
-	}
-	// listen indefinitely for new messages coming
-	// through on our WebSocket connection
-	reader(ws)
-}
-func reader(conn *websocket.Conn) {
-	for {
-		// read in a message
-		messageType, p, err := conn.ReadMessage()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		// print out that message for clarity
-		log.Println("message_type:")
-		log.Println(messageType, string(p))
-		q.Q(string(p))
-
-		if err := conn.WriteMessage(messageType, p); err != nil {
-			log.Println(err)
-			return
-		}
-
-	}
-}
-
 func main() {
 	flag.Parse()
 	hub := poker.NewHub()
 	go hub.Run()
 
+	// init badger db
+	dbStore, err := bgStore.NewBadgerStore("./var/badger")
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", serveHome)
 	r.HandleFunc("/p/{name}", servePad)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./template/static"))))
-	r.HandleFunc("/socket.io", func(w http.ResponseWriter, r *http.Request) {
-		poker.ServeWs(hub, w, r)
-	})
+	//r.HandleFunc("/socket.io", func(w http.ResponseWriter, r *http.Request) {
+	//	poker.ServeWs(hub, w, r)
+	//})
 
 	r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		poker.ServeWs(hub, w, r)
+		poker.ServeWs(hub, w, r, dbStore)
 	})
 
 	//r.HandleFunc("/ws", wsEndpoint)
@@ -106,7 +74,7 @@ func main() {
 		AllowCredentials: true,
 	})
 	handler := c.Handler(r)
-	err := http.ListenAndServe(*addr, handler)
+	err = http.ListenAndServe(*addr, handler)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
