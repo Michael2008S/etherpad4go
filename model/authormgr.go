@@ -9,7 +9,9 @@ import (
 )
 
 const (
-	AuthorKey = "globalAuthor:"
+	AuthorKey       = "globalAuthor:"
+	Token2AuthorKey = "token2author"
+	Mapper2Author   = "mapper2author"
 )
 
 var ColorPalette = []string{"#ffc7c7", "#fff1c7", "#e3ffc7", "#c7ffd5", "#c7ffff", "#c7d5ff", "#e3c7ff",
@@ -21,35 +23,55 @@ var ColorPalette = []string{"#ffc7c7", "#fff1c7", "#e3ffc7", "#c7ffd5", "#c7ffff
 	"#eaaedd", "#adc6eb", "#bedad1", "#dee9af", "#e9afc2", "#f8d2a0", "#b3b3e6",}
 
 type AuthorMgr struct {
-	store.Store
+	dbStore store.Store
 }
 
 type Author struct {
-
+	ColorID   int    `json:"colorId"`
+	Name      string `json:"name"`
+	Timestamp int64  `json:"timestamp"`
 }
 
-func DoesAuthorExist(authorID string) {
-
+func (a *AuthorMgr) DoesAuthorExist(authorID string) bool {
+	_, b := a.dbStore.Get([]byte(AuthorKey + authorID))
+	return b
 }
 
-func GetAuthor4Token(token string) {
-
+func (a *AuthorMgr) GetAuthor4Token(token string) string {
+	author := a.mapAuthorWithDBKey(Token2AuthorKey, token)
+	return author
 }
 
 // Returns the AuthorID for a mapper. We can map using a mapperkey, so far this is token2author and mapper2author
-func CreateAuthorIfNotExistsFor(authorMapper, name string) {
-
+func (a *AuthorMgr) CreateAuthorIfNotExistsFor(authorMapper, name string) string {
+	author := a.mapAuthorWithDBKey(Mapper2Author, authorMapper)
+	if name != "" {
+		// TODO setAuthorNam
+	}
+	return author
 }
 
-func (a *AuthorMgr) CreateAuthor(name string) {
-	author := utils.RandStringRunes(16)
-	authObj := map[string]interface{}{}
+func (a *AuthorMgr) CreateAuthor(name string) string {
+	author := "a." + utils.RandStringRunes(16)
 	rand.Seed(time.Now().UnixNano())
-	authObj["colorId"] = rand.Intn(len(ColorPalette))
-	authObj["name"] = name
-	authObj["timestamp"] = time.Now().Unix()
+	authObj := Author{}
+	authObj.ColorID = rand.Intn(len(ColorPalette))
+	authObj.Name = name
+	authObj.Timestamp = time.Now().Unix()
 	authObjStr, _ := json.Marshal(authObj)
-	a.Store.Set([]byte(AuthorKey+author), authObjStr, 0)
+	a.dbStore.Set([]byte(AuthorKey+author), authObjStr, 0)
+	return author
+}
+
+func (a *AuthorMgr) mapAuthorWithDBKey(mapperKey, mapper string) string {
+	val, b := a.dbStore.Get([]byte(mapperKey + mapper))
+	authorID := string(val)
+	if !b {
+		authorID = a.CreateAuthor("")
+		a.dbStore.Set([]byte(mapperKey+":"+mapper), []byte(authorID), 0)
+	}
+	//TODO  update the timestamp of this author
+	return authorID
 }
 
 func GetAuthor(author string) {
