@@ -205,9 +205,9 @@ function handshakeNew(){
   };
 
   var initalized = false;
-  socket.onmessage = function(obj)
+  socket.onmessage = event =>
   {
-
+    obj = JSON.parse(event.data);
     console.log("handshake_new_on_message:",obj);
 
     //the access was not granted, give the user a message
