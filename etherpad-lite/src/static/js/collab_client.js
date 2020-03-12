@@ -232,12 +232,18 @@ function getCollabClient(ace2editor, serverVars, initialUserInfo, options, _pad)
 
   function sendMessage(msg)
   {
-    getSocket().json.send(
-    {
+    // getSocket().json.send(
+    // {
+    //   type: "COLLABROOM",
+    //   component: "pad",
+    //   data: msg
+    // });
+
+    getSocket().send(JSON.stringify({
       type: "COLLABROOM",
       component: "pad",
       data: msg
-    });
+    }));
   }
 
   function wrapRecordingErrors(catcher, func)

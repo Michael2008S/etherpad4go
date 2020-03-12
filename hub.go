@@ -43,23 +43,8 @@ func (h *Hub) Run() {
 			// 消息判断分发处理
 			q.Q("Run_broadcast:", string(message))
 
-			newMsg := `
-{
-  type: 'COLLABROOM',
-  data: {
-    type: 'USER_NEWINFO',
-    userInfo: {
-      ip: '127.0.0.1',
-      colorId: 36,
-      userAgent: 'Anonymous',
-      userId: 'a.Py0WdSkbof4tM4DD'
-    }
-  }
-}
-
-`
-
-			responseMsg := []byte(newMsg)
+			handleMessage(message)
+			responseMsg := []byte("{}")
 
 			for client := range h.clients {
 				select {
@@ -73,7 +58,7 @@ func (h *Hub) Run() {
 	}
 }
 
-func handleMessage(message []byte) {
+func handleMessage(message []byte) string {
 	msgType := gojsonq.New().FromString(string(message)).Find("type")
 	//
 	//accessStatus =  securityManager.checkAccess(padID, sessionCookie, token, password)
@@ -87,6 +72,8 @@ func handleMessage(message []byte) {
 	} else if msgType.(string) == "CHANGESET_REQ" {
 		//	handleChangesetRequest(client, message);
 	}
+
+	return ""
 }
 
 func handleClientReady() {
