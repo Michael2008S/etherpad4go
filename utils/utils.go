@@ -16,3 +16,7 @@ func RandStringRunes(n int) string {
 	return string(b)
 }
 
+func IsValidPadId(padId string) bool {
+	// TODO
+	return true
+}
