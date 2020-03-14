@@ -141,35 +141,73 @@ type smartOpAssembler struct {
 }
 
 func (soa *smartOpAssembler) flushKeeps() {
-
+	soa.assem.append(soa.keepAssem.toString())
+	soa.keepAssem.clear()
 }
 
 func (soa *smartOpAssembler) flushPlusMinus() {
-
+	soa.assem.append(soa.minusAssem.toString())
+	soa.minusAssem.clear()
+	soa.assem.append(soa.plusAssem.toString())
+	soa.plusAssem.clear()
 }
 
-func (soa *smartOpAssembler) append() {
-
+func (soa *smartOpAssembler) append(op Operator) {
+	if len(op.OpCode) <= 0 || op.Chars <= 0 {
+		return
+	}
+	if op.OpCode == "-" {
+		if soa.lastOpcode == "=" {
+			soa.flushKeeps()
+		}
+		soa.minusAssem.append(op)
+		soa.lengthChange -= op.Chars
+	} else if op.OpCode == "+" {
+		if soa.lastOpcode == "=" {
+			soa.flushKeeps()
+		}
+		soa.plusAssem.append(op)
+		soa.lengthChange += op.Chars
+	} else if op.OpCode == "=" {
+		if soa.lastOpcode == "=" {
+			soa.flushPlusMinus()
+		}
+		soa.keepAssem.append(op)
+	}
+	soa.lastOpcode = op.OpCode
 }
 
-func (soa *smartOpAssembler) appendOpWithText(opCode,text,attribs,pool string) {
+func (soa *smartOpAssembler) appendOpWithText(opCode, text, attribs, pool string) {
 	op := Operator{}
 	op.OpCode = opCode
-	op.attribs = 	makeAttribsString(opCode,attribs,pool)
+	op.attribs = makeAttribsString(opCode, attribs, pool)
+	lastNewlinePos := strings.LastIndex(text, "\n")
+	if lastNewlinePos < 0 {
+		op.Chars = len(text)
+		op.Lines = 0
+		soa.append(op)
+	} else {
+		op.Chars = lastNewlinePos + 1
+		op.Lines = len(text) // FIXME text.match(/\n/g).length;
+		soa.append(op)
+		op.Chars = len(text) - (lastNewlinePos + 1)
+		op.Lines = 0
+		soa.append(op)
+	}
 }
 
-func (soa *smartOpAssembler) toString() string{
+func (soa *smartOpAssembler) toString() string {
 	soa.flushPlusMinus()
 	soa.flushKeeps()
 	return soa.assem.toString()
 }
 
 func (soa *smartOpAssembler) clear() {
-  soa.minusAssem.clear()
-  soa.plusAssem.clear()
-  soa.keepAssem.clear()
-  soa.assem.clear()
-  soa.lengthChange = 0
+	soa.minusAssem.clear()
+	soa.plusAssem.clear()
+	soa.keepAssem.clear()
+	soa.assem.clear()
+	soa.lengthChange = 0
 }
 
 func (soa *smartOpAssembler) endDocument() {
@@ -496,19 +534,27 @@ func Identity() {
  * @param optNewTextAPairs {string} new pairs to be inserted
  * @param pool {AttribPool} Attribution Pool
  */
-func MakeSplice(oldFullText string, spliceStart, numRemoved int, newText string, optNewTextAPairs string, pool string) {
-	oldLen := len(oldFullText)
-	if spliceStart >= oldLen {
-		spliceStart = oldLen - 1
+func (chgset *ChangeSet) MakeSplice(oldFullText string, spliceStart, numRemoved int,
+	newText string, optNewTextAPairs string, pool string) string {
+	chgset.OldLen = len(oldFullText)
+	if spliceStart >= chgset.OldLen {
+		spliceStart = chgset.OldLen - 1
 	}
 
-	if numRemoved > (oldLen - spliceStart) {
-		numRemoved = oldLen - spliceStart
+	if numRemoved > (chgset.OldLen - spliceStart) {
+		numRemoved = chgset.OldLen - spliceStart
 	}
 	oldText := SubString(oldFullText, spliceStart, spliceStart+numRemoved)
-	newLen := oldLen + len(newText) - oldLen
+	chgset.NewLen = chgset.OldLen + len(newText) - chgset.OldLen
 
-	assem := smartOpAssembler()
+	assem := smartOpAssembler{}
+	assem.appendOpWithText("=", SubString(oldFullText, 0, spliceStart), "", "")
+	assem.appendOpWithText("-", oldText, "", "")
+	assem.appendOpWithText("+", newText, optNewTextAPairs, "")
+	assem.endDocument()
+	chgset.Ops = assem.toString()
+	chgset.CharBank = newText
+	return chgset.Pack()
 }
 
 /**
@@ -666,7 +712,13 @@ func Builder() {
 
 }
 
-func makeAttribsString() {
+func makeAttribsString(opCode, attribs, pool string) string {
+	// makeAttribsString(opcode, '*3') or makeAttribsString(opcode, [['foo','bar']], myPool) work
+	if len(opCode) <= 0 {
+		return ""
+	}
+	// FIXME
+	return ""
 
 }
 
