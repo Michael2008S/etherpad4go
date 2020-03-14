@@ -1,5 +1,22 @@
 package changeset
 
+import (
+	"errors"
+	"regexp"
+	"strconv"
+	"strings"
+)
+
+type ChangeSet struct {
+	// length of the text before changeset
+	OldLen int
+	// length of the text after changeset
+	NewLen int
+
+	Ops      string
+	CharBank string
+}
+
 /**
  * returns the required length of the text before changeset
  * can be applied
@@ -23,7 +40,7 @@ func newLen() {
  * @param optStartIndex {int} from where in the string should the iterator start
  * @return {Op} type object iterator
  */
-func opIterator(){
+func opIterator() {
 
 }
 
@@ -31,7 +48,7 @@ func opIterator(){
  * Cleans an Op object
  * @param {Op} object to be cleared
  */
-func clearOp(){
+func clearOp() {
 
 }
 
@@ -39,7 +56,7 @@ func clearOp(){
  * Creates a new Op object
  * @param optOpcode the type operation of the Op object
  */
-func newOp(){
+func newOp() {
 
 }
 
@@ -47,7 +64,7 @@ func newOp(){
  * Clones an Op
  * @param op Op to be cloned
  */
-func cloneOp(){
+func cloneOp() {
 
 }
 
@@ -56,21 +73,21 @@ func cloneOp(){
  * @param op1 src Op
  * @param op2 dest Op
  */
-func copyOp(){
-	
+func copyOp() {
+
 }
 
 /**
  * Writes the Op in a string the way that changesets need it
  */
-func opString(){
+func opString() {
 
 }
 
 /**
  * Used just for debugging
  */
-func stringOp (){
+func stringOp() {
 
 }
 
@@ -78,7 +95,7 @@ func stringOp (){
  * Used to check if a Changeset if valid
  * @param cs {Changeset} Changeset to be checked
  */
-func checkRep(){
+func checkRep() {
 
 }
 
@@ -90,15 +107,15 @@ func checkRep(){
  * creates an object that allows you to append operations (type Op) and also
  * compresses them if possible
  */
-func smartOpAssembler(){
+func smartOpAssembler() {
 
 }
 
-func mergingOpAssembler(){
+func mergingOpAssembler() {
 
 }
 
-func opAssembler(){
+func opAssembler() {
 
 }
 
@@ -106,22 +123,42 @@ func opAssembler(){
  * A custom made String Iterator
  * @param str {string} String to be iterated over
  */
-func stringIterator(){
+func stringIterator() {
 
 }
 
 /**
  * A custom made StringBuffer
  */
-func stringAssembler(){
+func stringAssembler() {
 
 }
 
 // @description Unpacks a string encoded Changeset into a proper Changeset object
 // @param cs {string} String encoded Changeset
 // @return {Changeset} a Changeset class
-func Unpack() {
-
+func (chgset *ChangeSet) Unpack(cs string) error {
+	reg := regexp.MustCompile("Z:([0-9a-z]+)([><])([0-9a-z]+)|")
+	headerMatch := reg.FindStringSubmatch(cs)
+	if len(headerMatch) < 4 || len(headerMatch[0]) <= 0 {
+		return errors.New("Unpack change set error.")
+	}
+	oldLen, _ := strconv.ParseInt(headerMatch[1], 36, 32)
+	chgset.OldLen = int(oldLen)
+	changeSign := -1
+	if headerMatch[2] == ">" {
+		changeSign = 1
+	}
+	changeMag, _ := strconv.ParseInt(headerMatch[3], 36, 32)
+	chgset.NewLen = int(oldLen) + changeSign*int(changeMag)
+	opsStart := len(headerMatch)
+	opsEnd := strings.Index(cs, "$")
+	if opsEnd < 0 {
+		opsEnd = len(cs)
+	}
+	chgset.Ops = SubString(cs, opsStart, opsEnd)
+	chgset.CharBank = SubString(cs, opsEnd+1, len(cs))
+	return nil
 }
 
 /**
@@ -129,7 +166,7 @@ func Unpack() {
  * It is used for applying Changesets on arrays of lines
  * Note from prev docs: "lines" need not be an array as long as it supports certain calls (lines_foo inside).
  */
-func textLinesMutator(){
+func textLinesMutator() {
 
 }
 
@@ -149,8 +186,7 @@ func textLinesMutator(){
  * @return {string} the integrated changeset
  */
 
-
-func applyZip(){
+func applyZip() {
 
 }
 
