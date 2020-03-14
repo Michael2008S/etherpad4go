@@ -18,21 +18,21 @@ type ChangeSet struct {
 	CharBank string
 }
 
-/**
- * returns the required length of the text before changeset
- * can be applied
- * @param cs {string} String representation of the Changeset
- */
-func oldLen() {
+type OperatorIterator struct {
+	OpsStr     string
+	regex      string
+	startIndex int
+	curIndex   int
+	prevIndex  int
 
+	Operator Operator
 }
 
-/**
- * returns the length of the text after changeset is applied
- * @param cs {string} String representation of the Changeset
- */
-func newLen() {
-
+type Operator struct {
+	OpCode  string
+	Chars   int
+	Lines   int
+	attribs string
 }
 
 /**
@@ -41,8 +41,21 @@ func newLen() {
  * @param optStartIndex {int} from where in the string should the iterator start
  * @return {Op} type object iterator
  */
-func opIterator() {
+func (opIter *OperatorIterator) Iterator(ops string, optStartIndex int) *OperatorIterator {
+	opIter.regex = `((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=])([0-9a-z]+)|\?|`
 
+	opIter.startIndex = optStartIndex
+	opIter.curIndex = opIter.startIndex
+	opIter.prevIndex = opIter.curIndex
+
+	return opIter
+}
+
+func (opIter *OperatorIterator) nextRegexMatch(){
+	opIter.prevIndex = opIter.curIndex
+	//reg:= regexp.MustCompile(opIter.regex)
+	//result := reg.FindAllStringSubmatchIndex(opIter.OpsStr)
+	//reg.FindAllStringSubmatchIndex()
 }
 
 /**
@@ -157,7 +170,7 @@ func (chgset *ChangeSet) Unpack(cs string) error {
 	if opsEnd < 0 {
 		opsEnd = len(cs)
 	}
-	chgset.Ops = SubString(cs, opsStart, opsEnd)
+	chgset.Ops = SubString(cs, opsStart+1, opsEnd)
 	chgset.CharBank = SubString(cs, opsEnd+1, len(cs))
 	return nil
 }
@@ -203,10 +216,10 @@ func (chgset *ChangeSet) Pack() string {
 	lenDiff := chgset.NewLen - chgset.OldLen
 	lenDiffStr := "<"
 	if lenDiff > 0 {
-		lenDiffStr = "<"
+		lenDiffStr = ">"
 	}
-	return fmt.Sprintf("Z:%s%s%s%s$%s",strconv.FormatInt(int64(chgset.OldLen),36),lenDiffStr,
-		strconv.FormatInt(int64(chgset.NewLen),36),chgset.Ops,chgset.CharBank)
+	return fmt.Sprintf("Z:%s%s%s%s$%s", strconv.FormatInt(int64(chgset.OldLen), 36), lenDiffStr,
+		strconv.FormatInt(int64(lenDiff), 36), chgset.Ops, chgset.CharBank)
 }
 
 /**
