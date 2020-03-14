@@ -3,28 +3,36 @@ package model
 import (
 	"fmt"
 	"github.com/Michael2008S/etherpad4go/store"
+	"github.com/Michael2008S/etherpad4go/utils/changeset"
+	"strings"
 )
-
-func CleanText(text string) {
-
-}
 
 type Pad struct {
 	dbStore store.Store
-
 
 	Id   string
 	Text string
 }
 
-func (p *Pad)Init(){
-	value,found := p.dbStore.Get([]byte(PadKey+p.Id))
+func (p *Pad) Init() {
+	value, found := p.dbStore.Get([]byte(PadKey + p.Id))
 	if found {
-
+		// TODO
+		fmt.Println(value)
 	} else {
 		// this pad doesn't exist, so create it
-		fmt.Println(value)
+		cs := changeset.ChangeSet{}
+		firstChangeset := cs.MakeSplice("\n", 0, 0, CleanText(p.Text), "", "")
+		p.appendRevision(firstChangeset, "")
 	}
+}
+
+func CleanText(text string) string {
+	strings.Replace(text, "\r\n", "\n", 0)
+	strings.Replace(text, "\r", "\n", 0)
+	strings.Replace(text, "\t", "        ", 0)
+	strings.Replace(text, "\xa0", " ", 0)
+	return text
 }
 
 func (p *Pad) apool() {
@@ -43,7 +51,9 @@ func (p *Pad) getPublicStatus() {
 
 }
 
-func (p *Pad) appendRevision() {
+func (p *Pad) appendRevision(aChangeset, author string) {
+	cs := changeset.ChangeSet{}
+	cs.
 
 }
 

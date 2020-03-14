@@ -414,7 +414,10 @@ func (chgset *ChangeSet) Pack() string {
  * @params cs {string} String encoded Changeset
  * @params str {string} String to which a Changeset should be applied
  */
-func ApplyToText() {
+func (chgset *ChangeSet) ApplyToText(cs, str string) {
+	chgset.Unpack(cs)
+	//FIXME exports.assert(str.length == unpacked.oldLen, "mismatched apply: ", str.length, " / ", unpacked.oldLen);
+	csIter =opIterator
 
 }
 
@@ -469,7 +472,7 @@ func _slicerZipperFunc() {
  * @param astr {string} the attribs string of a AText
  * @param pool {AttribsPool} the attibutes pool
  */
-func ApplyToAttribution() {
+func (chgset *ChangeSet) ApplyToAttribution() {
 
 }
 
@@ -636,8 +639,9 @@ func makeAText() {
  * @param atext {AText}
  * @param pool {AttribPool} Attribute Pool to add to
  */
-func applyToAText() {
-
+func (chgset *ChangeSet) applyToAText(cs, aText, pool string) {
+	chgset.ApplyToText()
+	chgset.ApplyToAttribution()
 }
 
 /**
