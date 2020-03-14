@@ -179,6 +179,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, dbStore bgStore.S
 // 发送客户端数据：
 func sendClientVars(conn *websocket.Conn) {
 	clientVarsData := api.ClientVarsDataResp{}
+	clientVarsData.SkinName = "no-skin"
 	collabClientVars := api.CollabClientVars{
 		InitialAttributedText: struct {
 			Text    string `json:"text"`

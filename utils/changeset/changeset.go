@@ -3,6 +3,7 @@ package changeset
 import (
 	"errors"
 	"fmt"
+	"github.com/jinzhu/copier"
 	"regexp"
 	"strconv"
 	"strings"
@@ -51,7 +52,7 @@ func (opIter *OperatorIterator) Iterator(ops string, optStartIndex int) *Operato
 	return opIter
 }
 
-func (opIter *OperatorIterator) nextRegexMatch(){
+func (opIter *OperatorIterator) nextRegexMatch() {
 	opIter.prevIndex = opIter.curIndex
 	//reg:= regexp.MustCompile(opIter.regex)
 	//result := reg.FindAllStringSubmatchIndex(opIter.OpsStr)
@@ -121,16 +122,171 @@ func checkRep() {
  * creates an object that allows you to append operations (type Op) and also
  * compresses them if possible
  */
-func smartOpAssembler() {
+type smartOpAssembler struct {
+	// Like opAssembler but able to produce conforming exportss
+	// from slightly looser input, at the cost of speed.
+	// Specifically:
+	// - merges consecutive operations that can be merged
+	// - strips final "="
+	// - ignores 0-length changes
+	// - reorders consecutive + and - (which margingOpAssembler doesn't do)
+
+	minusAssem mergingOpAssembler
+	plusAssem  mergingOpAssembler
+	keepAssem  mergingOpAssembler
+	assem      stringAssembler
+
+	lastOpcode   string
+	lengthChange int
+}
+
+func (soa *smartOpAssembler) flushKeeps() {
 
 }
 
-func mergingOpAssembler() {
+func (soa *smartOpAssembler) flushPlusMinus() {
 
 }
 
-func opAssembler() {
+func (soa *smartOpAssembler) append() {
 
+}
+
+func (soa *smartOpAssembler) appendOpWithText(opCode,text,attribs,pool string) {
+	op := Operator{}
+	op.OpCode = opCode
+	op.attribs = 	makeAttribsString(opCode,attribs,pool)
+}
+
+func (soa *smartOpAssembler) toString() string{
+	soa.flushPlusMinus()
+	soa.flushKeeps()
+	return soa.assem.toString()
+}
+
+func (soa *smartOpAssembler) clear() {
+  soa.minusAssem.clear()
+  soa.plusAssem.clear()
+  soa.keepAssem.clear()
+  soa.assem.clear()
+  soa.lengthChange = 0
+}
+
+func (soa *smartOpAssembler) endDocument() {
+	soa.keepAssem.endDocument()
+}
+
+func (soa *smartOpAssembler) getLengthChange() int {
+	return soa.lengthChange
+}
+
+/**
+ * A custom made StringBuffer
+ */
+type stringAssembler []string
+
+func (sa stringAssembler) append(s string) {
+	sa = append(sa, s)
+}
+
+func (sa stringAssembler) toString() string {
+	return strings.Join(sa, "")
+}
+
+func (sa stringAssembler) clear() {
+	sa = []string{}
+}
+
+//func mergingOpAssembler() {
+//	assem := opAssembler()
+//	bufOp := newOp()
+//}
+
+type mergingOpAssembler struct {
+	// This assembler can be used in production; it efficiently
+	// merges consecutive operations that are mergeable, ignores
+	// no-ops, and drops final pure "keeps".  It does not re-order
+	// operations.
+
+	assem OperatorAssembler
+	bufOp Operator
+
+	// If we get, for example, insertions [xxx\n,yyy], those don't merge,
+	// but if we get [xxx\n,yyy,zzz\n], that merges to [xxx\nyyyzzz\n].
+	// This variable stores the length of yyy and any other newline-less
+	// ops immediately after it.
+	bufOpAdditionalCharsAfterNewline int
+}
+
+func (moa *mergingOpAssembler) flush(isEndDocument bool) {
+	if moa.bufOp.OpCode != "" {
+		if isEndDocument && moa.bufOp.OpCode == "=" && moa.bufOp.attribs != "" {
+			// final merged keep, leave it implicit
+		} else {
+			moa.assem.Append(moa.bufOp)
+			if moa.bufOpAdditionalCharsAfterNewline > 0 {
+				moa.bufOp.Chars = moa.bufOpAdditionalCharsAfterNewline
+				moa.bufOp.Lines = 0
+				moa.assem.Append(moa.bufOp)
+				moa.bufOpAdditionalCharsAfterNewline = 0
+			}
+		}
+		moa.bufOp.OpCode = ""
+	}
+}
+
+func (moa *mergingOpAssembler) append(op Operator) {
+	if op.Chars > 0 {
+		if moa.bufOp.OpCode == op.OpCode && moa.bufOp.attribs == op.attribs {
+			if op.Lines > 0 {
+				// bufOp and additional chars are all mergeable into a multi-line op
+				moa.bufOp.Chars += moa.bufOpAdditionalCharsAfterNewline + op.Chars
+				moa.bufOp.Lines = op.Lines
+				moa.bufOpAdditionalCharsAfterNewline = 0
+			} else if moa.bufOp.Lines == 0 {
+				// both bufOp and op are in-line
+				moa.bufOp.Chars += op.Chars
+			} else {
+				moa.bufOpAdditionalCharsAfterNewline += op.Chars
+			}
+		} else {
+			moa.flush(false)
+			copier.Copy(moa.bufOp, op)
+		}
+	}
+}
+
+func (moa *mergingOpAssembler) endDocument() {
+	moa.flush(true)
+}
+
+func (moa *mergingOpAssembler) toString() string {
+	moa.flush(false)
+	return moa.assem.toString()
+}
+
+func (moa *mergingOpAssembler) clear() {
+	moa.assem.clear()
+	moa.bufOp = Operator{}
+}
+
+// this function allows op to be mutated later (doesn't keep a ref)
+type OperatorAssembler []string
+
+func (oa OperatorAssembler) Append(op Operator) {
+	oa = append(oa, op.attribs)
+	if op.Lines > 0 {
+		oa = append(oa, "|", strconv.Itoa(op.Lines))
+	}
+	oa = append(oa, op.OpCode, strconv.Itoa(op.Chars))
+}
+
+func (oa OperatorAssembler) toString() string {
+	return strings.Join(oa, "")
+}
+
+func (oa OperatorAssembler) clear() {
+	oa = OperatorAssembler{}
 }
 
 /**
@@ -138,13 +294,6 @@ func opAssembler() {
  * @param str {string} String to be iterated over
  */
 func stringIterator() {
-
-}
-
-/**
- * A custom made StringBuffer
- */
-func stringAssembler() {
 
 }
 
@@ -347,8 +496,19 @@ func Identity() {
  * @param optNewTextAPairs {string} new pairs to be inserted
  * @param pool {AttribPool} Attribution Pool
  */
-func MakeSplice() {
+func MakeSplice(oldFullText string, spliceStart, numRemoved int, newText string, optNewTextAPairs string, pool string) {
+	oldLen := len(oldFullText)
+	if spliceStart >= oldLen {
+		spliceStart = oldLen - 1
+	}
 
+	if numRemoved > (oldLen - spliceStart) {
+		numRemoved = oldLen - spliceStart
+	}
+	oldText := SubString(oldFullText, spliceStart, spliceStart+numRemoved)
+	newLen := oldLen + len(newText) - oldLen
+
+	assem := smartOpAssembler()
 }
 
 /**

@@ -11,7 +11,7 @@ type PadMgr struct {
 	dbStore store.Store
 }
 
-func GetPad(id,text string){
+func (p *PadMgr)GetPad(id,text string){
 
 }
 

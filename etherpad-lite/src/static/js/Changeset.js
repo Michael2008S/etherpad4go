@@ -870,7 +870,6 @@ exports.applyZip = function (in1, idx1, in2, idx2, func) {
 exports.unpack = function (cs) {
   var headerRegex = /Z:([0-9a-z]+)([><])([0-9a-z]+)|/;
   var headerMatch = headerRegex.exec(cs);
-  console.log(headerMatch);
   if ((!headerMatch) || (!headerMatch[0])) {
     exports.error("Not a exports: " + cs);
   }

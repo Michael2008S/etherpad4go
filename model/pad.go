@@ -1,10 +1,30 @@
 package model
 
+import (
+	"fmt"
+	"github.com/Michael2008S/etherpad4go/store"
+)
+
 func CleanText(text string) {
 
 }
 
 type Pad struct {
+	dbStore store.Store
+
+
+	Id   string
+	Text string
+}
+
+func (p *Pad)Init(){
+	value,found := p.dbStore.Get([]byte(PadKey+p.Id))
+	if found {
+
+	} else {
+		// this pad doesn't exist, so create it
+		fmt.Println(value)
+	}
 }
 
 func (p *Pad) apool() {
@@ -107,6 +127,6 @@ func (p *Pad) getSavedRevisions() {
 
 }
 
-func generateSalt(){
+func generateSalt() {
 
 }
