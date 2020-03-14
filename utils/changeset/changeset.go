@@ -2,6 +2,7 @@ package changeset
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -198,8 +199,14 @@ func applyZip() {
  * @params bank {string} Charbank of the Changeset
  * @returns {Changeset} a Changeset class
  */
-func Pack() {
-
+func (chgset *ChangeSet) Pack() string {
+	lenDiff := chgset.NewLen - chgset.OldLen
+	lenDiffStr := "<"
+	if lenDiff > 0 {
+		lenDiffStr = "<"
+	}
+	return fmt.Sprintf("Z:%s%s%s%s$%s",strconv.FormatInt(int64(chgset.OldLen),36),lenDiffStr,
+		strconv.FormatInt(int64(chgset.NewLen),36),chgset.Ops,chgset.CharBank)
 }
 
 /**
