@@ -42,7 +42,7 @@ type Operator struct {
  * @param optStartIndex {int} from where in the string should the iterator start
  * @return {Op} type object iterator
  */
-func (opIter *OperatorIterator) Iterator(ops string, optStartIndex int) *OperatorIterator {
+func (opIter *OperatorIterator) NewIterator(opsStr string, optStartIndex int) *OperatorIterator {
 	opIter.regex = `((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=])([0-9a-z]+)|\?|`
 
 	opIter.startIndex = optStartIndex
@@ -59,37 +59,16 @@ func (opIter *OperatorIterator) nextRegexMatch() {
 	//reg.FindAllStringSubmatchIndex()
 }
 
-/**
- * Cleans an Op object
- * @param {Op} object to be cleared
- */
-func clearOp() {
-
+func (opIter *OperatorIterator) Next() bool {
+	return false
 }
 
-/**
- * Creates a new Op object
- * @param optOpcode the type operation of the Op object
- */
-func newOp() {
-
+func (opIter *OperatorIterator) hasNext() bool {
+	return false
 }
 
-/**
- * Clones an Op
- * @param op Op to be cloned
- */
-func cloneOp() {
-
-}
-
-/**
- * Copies op1 to op2
- * @param op1 src Op
- * @param op2 dest Op
- */
-func copyOp() {
-
+func (opIter *OperatorIterator) lastIndex() int {
+	return opIter.prevIndex
 }
 
 /**
@@ -417,7 +396,7 @@ func (chgset *ChangeSet) Pack() string {
 func (chgset *ChangeSet) ApplyToText(cs, str string) {
 	chgset.Unpack(cs)
 	//FIXME exports.assert(str.length == unpacked.oldLen, "mismatched apply: ", str.length, " / ", unpacked.oldLen);
-	csIter =opIterator
+	csIter = opIterator
 
 }
 
