@@ -463,7 +463,7 @@ func (chgset *ChangeSet) Pack() string {
  * @params cs {string} String encoded Changeset
  * @params str {string} String to which a Changeset should be applied
  */
-func (chgset *ChangeSet) ApplyToText(cs, str string) {
+func (chgset *ChangeSet) ApplyToText(cs, str string) (string, error) {
 	chgset.Unpack(cs)
 	//FIXME exports.assert(str.length == unpacked.oldLen, "mismatched apply: ", str.length, " / ", unpacked.oldLen);
 	csIter := NewOperatorIterator(chgset.Ops, 0)
@@ -471,13 +471,34 @@ func (chgset *ChangeSet) ApplyToText(cs, str string) {
 	strIter := NewStringIterator(str)
 	assem := stringAssembler{}
 
-	for csIter.hasNext(){
+	for csIter.hasNext() {
 		op := csIter.Next()
 		switch op.OpCode {
 		case "+":
-
+			//op is + and op.lines 0: no newlines must be in op.chars
+			//op is + and op.lines >0: op.chars must include op.lines newlines
+			if op.Lines != len(strings.Split(bankIter.peek(op.Chars), "\n"))-1 {
+				return "", errors.New(fmt.Sprintf("newline count is wrong in op +; cs:%s and text:%s ", cs, str))
+			}
+			assem.append(bankIter.take(op.Chars))
+		case "-":
+			//op is - and op.lines 0: no newlines must be in the deleted string
+			//op is - and op.lines >0: op.lines newlines must be in the deleted string
+			if op.Lines != len(strings.Split(strIter.peek(op.Chars), "\n"))-1 {
+				return "", errors.New(fmt.Sprintf("newline count is wrong in op -; cs:%s and text:%s ", cs, str))
+			}
+			strIter.skin(op.Chars)
+		case "=":
+			//op is = and op.lines 0: no newlines must be in the copied string
+			//op is = and op.lines >0: op.lines newlines must be in the copied string
+			if op.Lines != len(strings.Split(strIter.peek(op.Chars), "\n"))-1 {
+				return "", errors.New(fmt.Sprintf("newline count is wrong in op =; cs:%s and text:%s ", cs, str))
+			}
+			assem.append(strIter.take(op.Chars))
 		}
 	}
+	assem.append(strIter.take(strIter.remaining()))
+	return assem.toString(), nil
 }
 
 /**
