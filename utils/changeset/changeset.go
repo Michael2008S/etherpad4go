@@ -436,8 +436,29 @@ func textLinesMutator() {
  * @return {string} the integrated changeset
  */
 
-func applyZip() {
-
+func applyZip(in1, in2 string, idx1, idx2 int, aFunc func(Operator, Operator, Operator)) string {
+	iter1 := NewOperatorIterator(in1, idx1)
+	iter2 := NewOperatorIterator(in2, idx2)
+	assem := smartOpAssembler{}
+	op1 := Operator{}
+	op2 := Operator{}
+	opOut := Operator{}
+	for len(op1.OpCode) > 0 || iter1.hasNext() || len(op2.OpCode) > 0 || iter2.hasNext() {
+		if len(op1.OpCode) <= 0 && iter1.hasNext() {
+			iter1.Next()
+		}
+		if len(op2.OpCode) <= 0 && iter2.hasNext() {
+			iter2.Next()
+		}
+		aFunc(op1, op2, opOut)
+		if len(opOut.OpCode) > 0 {
+			//print(opOut.toSource());
+			assem.append(opOut)
+			opOut.OpCode = ""
+		}
+	}
+	assem.endDocument()
+	return assem.toString()
 }
 
 /**
@@ -537,13 +558,78 @@ func ComposeAttributes() {
  * Function used as parameter for applyZip to apply a Changeset to an
  * attribute
  */
-
-func _slicerZipperFunc() {
+func _slicerZipperFunc(attOp, csOp, opOut Operator, pool string) {
 	// attOp is the op from the sequence that is being operated on, either an
 	// attribution string or the earlier of two exportss being composed.
 	// pool can be null if definitely not needed.
 	//print(csOp.toSource()+" "+attOp.toSource()+" "+opOut.toSource());
-
+	if attOp.OpCode == "-" {
+		copier.Copy(opOut, attOp)
+		attOp.OpCode = ""
+	} else if len(attOp.OpCode) <= 0 {
+		copier.Copy(opOut, csOp)
+		csOp.OpCode = ""
+	} else {
+		switch csOp.OpCode {
+		case "-":
+			if csOp.Chars <= attOp.Chars {
+				// delete or delete part
+				if attOp.OpCode == "=" {
+					opOut.OpCode = "-"
+					opOut.Chars = csOp.Chars
+					opOut.Lines = csOp.Lines
+					opOut.attribs = ""
+				}
+				attOp.Chars -= csOp.Chars
+				attOp.Lines -= csOp.Lines
+				csOp.OpCode = ""
+				if attOp.Chars <= 0 {
+					attOp.OpCode = ""
+				}
+			} else {
+				// delete and keep going
+				if attOp.OpCode == "=" {
+					opOut.OpCode = "-"
+					opOut.Chars = attOp.Chars
+					opOut.Lines = attOp.Lines
+					opOut.attribs = ""
+				}
+				csOp.Chars -= attOp.Chars
+				csOp.Lines -= attOp.Lines
+				attOp.OpCode = ""
+			}
+		case "+":
+			// insert
+			copier.Copy(opOut, csOp)
+			csOp.OpCode = ""
+		case "=":
+			if csOp.Chars <= attOp.Chars {
+				// keep or keep part
+				opOut.OpCode = attOp.OpCode
+				opOut.Chars = csOp.Chars
+				opOut.Lines = csOp.Lines
+				opOut.attribs = composeAttributes
+				csOp.OpCode = ""
+				attOp.Chars -= csOp.Chars
+				attOp.Lines -= csOp.Lines
+				if attOp.Chars > 0 {
+					attOp.OpCode = ""
+				}
+			} else {
+				// keep and keep going
+				opOut.OpCode = attOp.OpCode
+				opOut.Chars = attOp.Chars
+				opOut.Lines = attOp.Lines
+				opOut.attribs = composeAttributes
+				attOp.OpCode = ""
+				csOp.Chars -= attOp.Chars
+				csOp.Lines -= attOp.Lines
+			}
+		case "":
+			copier.Copy(opOut, attOp)
+			attOp.OpCode = ""
+		}
+	}
 }
 
 /**
@@ -552,8 +638,11 @@ func _slicerZipperFunc() {
  * @param astr {string} the attribs string of a AText
  * @param pool {AttribsPool} the attibutes pool
  */
-func (chgset *ChangeSet) ApplyToAttribution() {
-
+func (chgset *ChangeSet) ApplyToAttribution(cs, str string, pool string) string {
+	chgset.Unpack(cs)
+	return applyZip(str, chgset.Ops, 0, 0, func(op1 Operator, op2 Operator, opOut Operator) {
+		_slicerZipperFunc(op1, op2, opOut, "")
+	})
 }
 
 func MutateAttributionLines() {
