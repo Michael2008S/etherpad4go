@@ -538,7 +538,7 @@ func MutateTextLines() {
  * @param resultIsMutaton {boolean}
  * @param pool {AttribPool} attribute pool
  */
-func ComposeAttributes() {
+func ComposeAttributes(att1, att2 string, resultIsMutation bool, pool string) string {
 	// att1 and att2 are strings like "*3*f*1c", asMutation is a boolean.
 	// Sometimes attribute (key,value) pairs are treated as attribute presence
 	// information, while other times they are treated as operations that
@@ -552,6 +552,18 @@ func ComposeAttributes() {
 	// ([(bold, true)], [(bold, )], true) -> [(bold, )]
 	// ([(bold, true)], [(bold, )], false) -> []
 	// pool can be null if att2 has no attributes.
+	if len(att1) <= 0 && resultIsMutation {
+		// In the case of a mutation (i.e. composing two exportss),
+		// an att2 composed with an empy att1 is just att2.  If att1
+		// is part of an attribution string, then att2 may remove
+		// attributes that are already gone, so don't do this optimization.
+		return att2
+	}
+	if len(att2) <= 0 {
+		return att1
+	}
+	var atts []int
+
 }
 
 /**
@@ -608,7 +620,7 @@ func _slicerZipperFunc(attOp, csOp, opOut Operator, pool string) {
 				opOut.OpCode = attOp.OpCode
 				opOut.Chars = csOp.Chars
 				opOut.Lines = csOp.Lines
-				opOut.attribs = composeAttributes
+				opOut.attribs = ComposeAttributes(attOp.attribs, csOp.attribs, attOp.OpCode == "=", pool)
 				csOp.OpCode = ""
 				attOp.Chars -= csOp.Chars
 				attOp.Lines -= csOp.Lines
@@ -620,7 +632,7 @@ func _slicerZipperFunc(attOp, csOp, opOut Operator, pool string) {
 				opOut.OpCode = attOp.OpCode
 				opOut.Chars = attOp.Chars
 				opOut.Lines = attOp.Lines
-				opOut.attribs = composeAttributes
+				opOut.attribs = ComposeAttributes(attOp.attribs, csOp.attribs, attOp.OpCode == "=", pool)
 				attOp.OpCode = ""
 				csOp.Chars -= attOp.Chars
 				csOp.Lines -= attOp.Lines
