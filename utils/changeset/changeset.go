@@ -45,10 +45,8 @@ type Operator struct {
  * @return {Op} type object iterator
  */
 func NewIterator(opsStr string, optStartIndex int) *OperatorIterator {
-
 	opIter := OperatorIterator{}
 	opIter.regex = `((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=])([0-9a-z]+)|\?|`
-
 	opIter.startIndex = optStartIndex
 	opIter.curIndex = opIter.startIndex
 	opIter.prevIndex = opIter.curIndex
@@ -59,13 +57,18 @@ func NewIterator(opsStr string, optStartIndex int) *OperatorIterator {
 	return &opIter
 }
 
-func (opIter *OperatorIterator) nextRegexMatch() {
+func (opIter *OperatorIterator) nextRegexMatch() error {
 	opIter.prevIndex = opIter.curIndex
 	reg := regexp.MustCompile(opIter.regex)
-	opIter.rgxResult = reg.FindStringSubmatch(opIter.OpsStr)
+	opsStr := SubString(opIter.OpsStr, opIter.prevIndex, len(opIter.OpsStr))
+	opIter.rgxResult = reg.FindStringSubmatch(opsStr)
 	if len(opIter.rgxResult) > 0 {
+		if opIter.rgxResult[0] == "?" {
+			return errors.New("Hit error opcode in op stream.")
+		}
 		opIter.curIndex = opIter.curIndex + len(opIter.rgxResult[0])
 	}
+	return nil
 }
 
 func (opIter *OperatorIterator) Next() Operator {

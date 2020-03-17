@@ -24,10 +24,9 @@ func TestOperatorIterator_NewIterator(t *testing.T) {
 	}
 	opIter := NewIterator(chgset.Ops, 0)
 	fmt.Println(opIter)
-	aOp := opIter.Next()
-	fmt.Println(aOp)
-	aOp = opIter.Next()
-	fmt.Println(aOp)
-	b := opIter.hasNext()
-	fmt.Println(b)
+	for opIter.hasNext() {
+		aOp := opIter.Next()
+		fmt.Println(aOp)
+		fmt.Println(opIter.hasNext())
+	}
 }
