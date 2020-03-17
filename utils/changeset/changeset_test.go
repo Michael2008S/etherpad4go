@@ -22,7 +22,7 @@ func TestOperatorIterator_NewIterator(t *testing.T) {
 	if err != nil {
 
 	}
-	opIter := NewIterator(chgset.Ops, 0)
+	opIter := NewOperatorIterator(chgset.Ops, 0)
 	fmt.Println(opIter)
 	for opIter.hasNext() {
 		aOp := opIter.Next()

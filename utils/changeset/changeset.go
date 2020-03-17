@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jinzhu/copier"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -44,7 +45,7 @@ type Operator struct {
  * @param optStartIndex {int} from where in the string should the iterator start
  * @return {Op} type object iterator
  */
-func NewIterator(opsStr string, optStartIndex int) *OperatorIterator {
+func NewOperatorIterator(opsStr string, optStartIndex int) *OperatorIterator {
 	opIter := OperatorIterator{}
 	opIter.regex = `((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=])([0-9a-z]+)|\?|`
 	opIter.startIndex = optStartIndex
@@ -332,8 +333,55 @@ func (oa OperatorAssembler) clear() {
  * A custom made String Iterator
  * @param str {string} String to be iterated over
  */
-func stringIterator() {
+type stringIterator struct {
+	str      string
+	curIndex int
+	newLines int
+}
 
+func NewStringIterator(str string) stringIterator {
+	si := stringIterator{}
+	si.newLines = len(strings.Split(str, "\n")) - 1
+
+	return si
+}
+
+func (si *stringIterator) take(n int) string {
+	if err := si.assertRemaining(n); err != nil {
+		log.Println(err)
+		return ""
+	}
+	s := SubStrLen(si.str, si.curIndex, n)
+	si.newLines = len(strings.Split(s, "\n")) - 1
+	si.curIndex += n
+	return s
+}
+
+func (si *stringIterator) peek(n int) string {
+	if err := si.assertRemaining(n); err != nil {
+		log.Println(err)
+		return ""
+	}
+	return SubStrLen(si.str, si.curIndex, n)
+}
+
+func (si *stringIterator) skin(n int) {
+	if err := si.assertRemaining(n); err != nil {
+		log.Println(err)
+		return
+	}
+	si.curIndex += n
+}
+
+func (si *stringIterator) remaining() int {
+	return len(si.str) - si.curIndex
+}
+
+func (si *stringIterator) assertRemaining(n int) error {
+	if n <= si.remaining() {
+		return errors.New(fmt.Sprintf("!(%d <= %d )", n, si.remaining()))
+	}
+	return nil
 }
 
 // @description Unpacks a string encoded Changeset into a proper Changeset object
@@ -418,8 +466,18 @@ func (chgset *ChangeSet) Pack() string {
 func (chgset *ChangeSet) ApplyToText(cs, str string) {
 	chgset.Unpack(cs)
 	//FIXME exports.assert(str.length == unpacked.oldLen, "mismatched apply: ", str.length, " / ", unpacked.oldLen);
-	//csIter = opIterator
+	csIter := NewOperatorIterator(chgset.Ops, 0)
+	bankIter := NewStringIterator(chgset.CharBank)
+	strIter := NewStringIterator(str)
+	assem := stringAssembler{}
 
+	for csIter.hasNext(){
+		op := csIter.Next()
+		switch op.OpCode {
+		case "+":
+
+		}
+	}
 }
 
 /**
