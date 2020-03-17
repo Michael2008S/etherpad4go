@@ -26,6 +26,8 @@ type OperatorIterator struct {
 	curIndex   int
 	prevIndex  int
 
+	rgxResult []string
+
 	Operator Operator
 }
 
@@ -42,29 +44,46 @@ type Operator struct {
  * @param optStartIndex {int} from where in the string should the iterator start
  * @return {Op} type object iterator
  */
-func (opIter *OperatorIterator) NewIterator(opsStr string, optStartIndex int) *OperatorIterator {
+func NewIterator(opsStr string, optStartIndex int) *OperatorIterator {
+
+	opIter := OperatorIterator{}
 	opIter.regex = `((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=])([0-9a-z]+)|\?|`
 
 	opIter.startIndex = optStartIndex
 	opIter.curIndex = opIter.startIndex
 	opIter.prevIndex = opIter.curIndex
+	opIter.OpsStr = opsStr
 
-	return opIter
+	opIter.nextRegexMatch()
+
+	return &opIter
 }
 
 func (opIter *OperatorIterator) nextRegexMatch() {
 	opIter.prevIndex = opIter.curIndex
-	//reg:= regexp.MustCompile(opIter.regex)
-	//result := reg.FindAllStringSubmatchIndex(opIter.OpsStr)
-	//reg.FindAllStringSubmatchIndex()
+	reg := regexp.MustCompile(opIter.regex)
+	opIter.rgxResult = reg.FindStringSubmatch(opIter.OpsStr)
+	if len(opIter.rgxResult) > 0 {
+		opIter.curIndex = opIter.curIndex + len(opIter.rgxResult[0])
+	}
 }
 
-func (opIter *OperatorIterator) Next() bool {
-	return false
+func (opIter *OperatorIterator) Next() Operator {
+	op := Operator{}
+	if len(opIter.rgxResult) > 0 && len(opIter.rgxResult[0]) > 0 {
+		op.attribs = opIter.rgxResult[1]
+		lines, _ := strconv.ParseInt(opIter.rgxResult[2], 36, 32)
+		op.Lines = int(lines)
+		op.OpCode = opIter.rgxResult[3]
+		chars, _ := strconv.ParseInt(opIter.rgxResult[4], 36, 32)
+		op.Chars = int(chars)
+		opIter.nextRegexMatch()
+	}
+	return op
 }
 
 func (opIter *OperatorIterator) hasNext() bool {
-	return false
+	return len(opIter.rgxResult) > 0 && len(opIter.rgxResult[0]) > 0
 }
 
 func (opIter *OperatorIterator) lastIndex() int {
@@ -396,7 +415,7 @@ func (chgset *ChangeSet) Pack() string {
 func (chgset *ChangeSet) ApplyToText(cs, str string) {
 	chgset.Unpack(cs)
 	//FIXME exports.assert(str.length == unpacked.oldLen, "mismatched apply: ", str.length, " / ", unpacked.oldLen);
-	csIter = opIterator
+	//csIter = opIterator
 
 }
 
@@ -619,7 +638,7 @@ func makeAText() {
  * @param pool {AttribPool} Attribute Pool to add to
  */
 func (chgset *ChangeSet) applyToAText(cs, aText, pool string) {
-	chgset.ApplyToText()
+	chgset.ApplyToText(cs, aText)
 	chgset.ApplyToAttribution()
 }
 
