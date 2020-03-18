@@ -538,7 +538,7 @@ func MutateTextLines() {
  * @param resultIsMutaton {boolean}
  * @param pool {AttribPool} attribute pool
  */
-func ComposeAttributes(att1, att2 string, resultIsMutation bool, pool string) string {
+func ComposeAttributes(att1, att2 string, resultIsMutation bool, pool AttributePool) string {
 	// att1 and att2 are strings like "*3*f*1c", asMutation is a boolean.
 	// Sometimes attribute (key,value) pairs are treated as attribute presence
 	// information, while other times they are treated as operations that
@@ -570,7 +570,7 @@ func ComposeAttributes(att1, att2 string, resultIsMutation bool, pool string) st
  * Function used as parameter for applyZip to apply a Changeset to an
  * attribute
  */
-func _slicerZipperFunc(attOp, csOp, opOut Operator, pool string) {
+func _slicerZipperFunc(attOp, csOp, opOut Operator, pool AttributePool) {
 	// attOp is the op from the sequence that is being operated on, either an
 	// attribution string or the earlier of two exportss being composed.
 	// pool can be null if definitely not needed.
@@ -650,10 +650,10 @@ func _slicerZipperFunc(attOp, csOp, opOut Operator, pool string) {
  * @param astr {string} the attribs string of a AText
  * @param pool {AttribsPool} the attibutes pool
  */
-func (chgset *ChangeSet) ApplyToAttribution(cs, str string, pool string) string {
+func (chgset *ChangeSet) ApplyToAttribution(cs, str string, pool AttributePool) string {
 	chgset.Unpack(cs)
 	return applyZip(str, chgset.Ops, 0, 0, func(op1 Operator, op2 Operator, opOut Operator) {
-		_slicerZipperFunc(op1, op2, opOut, "")
+		_slicerZipperFunc(op1, op2, opOut, pool)
 	})
 }
 
@@ -771,8 +771,10 @@ func moveOpsToNewPool() {
  * create an attribution inserting a text
  * @param text {string} text to be inserted
  */
-func makeAttribution() {
-
+func makeAttribution(text string) string {
+	assem := smartOpAssembler{}
+	assem.appendOpWithText("+", text, "", "")
+	return assem.toString()
 }
 
 /**
@@ -810,8 +812,20 @@ func mapAttribNumbers() {
  * @attribs attribs {string} optional, operations which insert
  *    the text and also puts the right attributes
  */
-func makeAText() {
+func makeAText(text, attribs string) AText {
+	aTxt := AText{
+		Text:    text,
+		Attribs: attribs,
+	}
+	if len(attribs) <= 0 {
+		aTxt.Attribs = makeAttribution(text)
+	}
+	return aTxt
+}
 
+type AText struct {
+	Text    string `json:"text"`
+	Attribs string `json:"attribs"`
 }
 
 /**
@@ -820,9 +834,12 @@ func makeAText() {
  * @param atext {AText}
  * @param pool {AttribPool} Attribute Pool to add to
  */
-func (chgset *ChangeSet) applyToAText(cs, aText, pool string) {
-	chgset.ApplyToText(cs, aText)
-	chgset.ApplyToAttribution()
+func (chgset *ChangeSet) applyToAText(cs string, aText AText, pool AttributePool) AText {
+	text, _ := chgset.ApplyToText(cs, aText.Text)
+	return AText{
+		Text:    text,
+		Attribs: chgset.ApplyToAttribution(cs, aText.Attribs, pool),
+	}
 }
 
 /**

@@ -6,23 +6,10 @@ var unpacked = Changeset.unpack(cs);
 
 var opiterator = Changeset.opIterator(unpacked.ops);
 console.log(opiterator);
-var aOp = opiterator.next();
-console.log(aOp);
-aOp = opiterator.next();
-console.log(aOp);
-hasNext = opiterator.hasNext(aOp);
-console.log(hasNext);
-aOp = opiterator.next();
-console.log(aOp);
-aOp = opiterator.next();
-console.log(aOp);
-
-hasNext = opiterator.hasNext(aOp);
-console.log(hasNext);
-
-aOp = opiterator.next();
-console.log(aOp);
-
+while (opiterator.hasNext()){
+    aOp = opiterator.next();
+    console.log(aOp);
+}
 
 var AttribPool = require("./AttributePool");
 var apool = new(AttribPool);
@@ -35,4 +22,7 @@ var atext = {"text":"bold text\nitalic text\nnormal text\n\n","attribs":"*0*1+9*
 console.log(atext);
 var opiterator = Changeset.opIterator(atext.attribs);
 console.log(opiterator);
-console.log(opiterator.next());
+while (opiterator.hasNext()){
+    console.log(opiterator.next());
+}
+

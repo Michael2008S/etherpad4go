@@ -1,17 +1,51 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Michael2008S/etherpad4go/store"
 	"github.com/Michael2008S/etherpad4go/utils/changeset"
+	"strconv"
 	"strings"
 )
 
-type Pad struct {
-	dbStore store.Store
+const (
+	PadKey         = "pad:"
+	PadRevisionKey = ":revs:"
+)
 
-	Id   string
-	Text string
+type Pad struct {
+	dbStore        store.Store             `json:"-"`
+	Id             string                  `json:"-"`
+	Pool           changeset.AttributePool `json:"pool"`
+	AText          string                  `json:"atext"`
+	Head           int                     `json:"head"`
+	ChatHead       int                     `json:"chatHead"`
+	PublicStatus   bool                    `json:"publicStatus"`
+	SavedRevisions []SavedRevision         `json:"savedRevisions"`
+}
+
+type SavedRevision struct {
+	revNum    int
+	savedById int
+	label     string
+	timestamp int
+	id        string
+}
+
+type RevData struct {
+	dbStore   store.Store `json:"-"`
+	changeset string      `json:"changeset"`
+	meta      meta        `json:"meta"`
+}
+type meta struct {
+	author    string `json:"author"`
+	timestamp int    `json:"timestamp"`
+}
+
+func (rd *RevData) SaveToDatabase(p Pad) {
+	jsonStr, _ := json.Marshal(rd)
+	rd.dbStore.Set([]byte(PadKey+p.Id+PadRevisionKey+strconv.Itoa(p.Head)), jsonStr, 0)
 }
 
 func (p *Pad) Init() {
@@ -35,34 +69,37 @@ func CleanText(text string) string {
 	return text
 }
 
-func (p *Pad) apool() {
-
+func (p *Pad) apool() changeset.AttributePool {
+	return p.Pool
 }
 
-func (p *Pad) getHeadRevisionNumber() {
-
+func (p *Pad) getHeadRevisionNumber() int {
+	return p.Head
 }
 
-func (p *Pad) getSavedRevisionsList() {
-
+func (p *Pad) getSavedRevisionsNumber() int {
+	return len(p.SavedRevisions)
 }
 
-func (p *Pad) getPublicStatus() {
+func (p *Pad) getSavedRevisionsList() int {
 
 }
 
 func (p *Pad) appendRevision(aChangeset, author string) {
 	cs := changeset.ChangeSet{}
-	cs.
+	cs.ApplyToText(aChangeset,p.AText,p.Pool)
+
 
 }
 
 func (p *Pad) saveToDatabase() {
-
+	jsonStr, _ := json.Marshal(p)
+	p.dbStore.Set([]byte(PadKey+p.Id), jsonStr, 0)
 }
 
 func (p *Pad) getLastEdit() {
-
+	revNum := p.getHeadRevisionNumber()
+	p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
 }
 
 func (p *Pad) getRevisionChangeset() {
