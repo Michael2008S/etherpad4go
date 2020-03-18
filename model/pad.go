@@ -6,6 +6,7 @@ import (
 	"github.com/Michael2008S/etherpad4go/store"
 	"github.com/Michael2008S/etherpad4go/utils/changeset"
 	"github.com/jinzhu/copier"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -112,6 +113,12 @@ func (p *Pad) appendRevision(aChangeset, author string) {
 	p.dbStore.Set([]byte(PadKey+p.Id+PadRevisionKey+strconv.Itoa(newRev)), jsonStr, 0)
 	p.saveToDatabase()
 
+	// TODO
+	//if (this.head == 0) {
+	//	hooks.callAll("padCreate", {'pad':this, 'author': author});
+	//} else {
+	//	hooks.callAll("padUpdate", {'pad':this, 'author': author});
+	//}
 }
 
 func (p *Pad) saveToDatabase() {
@@ -119,25 +126,44 @@ func (p *Pad) saveToDatabase() {
 	p.dbStore.Set([]byte(PadKey+p.Id), jsonStr, 0)
 }
 
-func (p *Pad) getLastEdit() {
+func (p *Pad) getLastEdit() RevData {
+	revData := RevData{}
 	revNum := p.getHeadRevisionNumber()
-	p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
+	data, _ := p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
+	json.Unmarshal(data, &revData)
+	return revData
 }
 
-func (p *Pad) getRevisionChangeset() {
-
+func (p *Pad) getRevisionChangeset(revNum int) string {
+	revData := RevData{}
+	data, _ := p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
+	json.Unmarshal(data, &revData)
+	return revData.changeset
 }
 
-func (p *Pad) getRevisionAuthor() {
-
+func (p *Pad) getRevisionAuthor(revNum int) string {
+	revData := RevData{}
+	data, _ := p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
+	json.Unmarshal(data, &revData)
+	return revData.meta.author
 }
 
-func (p *Pad) getRevisionDate() {
-
+func (p *Pad) getRevisionDate(revNum int) int {
+	revData := RevData{}
+	data, _ := p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
+	json.Unmarshal(data, &revData)
+	return revData.meta.timestamp
 }
 
-func (p *Pad) getAllAuthors() {
-
+func (p *Pad) getAllAuthors() (authors []string) {
+	for _, val := range p.Pool.NumToAttrib {
+	//	if val[0] == "author" && len(val[1]) > 0 {
+	//		authors = append(authors, val[1])
+	//	}
+		// TODO
+		log.Println(val)
+	}
+	return
 }
 
 func (p *Pad) getInternalRevisionAText() {
