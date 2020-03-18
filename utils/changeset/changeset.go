@@ -834,7 +834,7 @@ type AText struct {
  * @param atext {AText}
  * @param pool {AttribPool} Attribute Pool to add to
  */
-func (chgset *ChangeSet) applyToAText(cs string, aText AText, pool AttributePool) AText {
+func (chgset *ChangeSet) ApplyToAText(cs string, aText AText, pool AttributePool) AText {
 	text, _ := chgset.ApplyToText(cs, aText.Text)
 	return AText{
 		Text:    text,
