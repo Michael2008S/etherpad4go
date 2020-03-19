@@ -48,6 +48,12 @@ type meta struct {
 	aText     changeset.AText `json:"atext"`
 }
 
+func NewPad(id, text string) Pad {
+	p := Pad{Id: id,}
+	p.Init(text)
+	return p
+}
+
 func (rd *RevData) SaveToDatabase(p Pad) {
 	jsonStr, _ := json.Marshal(rd)
 	rd.dbStore.Set([]byte(PadKey+p.Id+PadRevisionKey+strconv.Itoa(p.Head)), jsonStr, 0)
@@ -55,7 +61,10 @@ func (rd *RevData) SaveToDatabase(p Pad) {
 
 func (p *Pad) Init(text string) {
 	value, found := p.dbStore.Get([]byte(PadKey + p.Id))
+	json.Unmarshal(value, p)
+	// if this pad exists, load it
 	if found {
+		// copy all attr. To a transfrom via fromJsonable if necassary
 		// TODO
 		fmt.Println(value)
 	} else {
@@ -64,6 +73,7 @@ func (p *Pad) Init(text string) {
 		firstChangeset := cs.MakeSplice("\n", 0, 0, CleanText(text), "", "")
 		p.appendRevision(firstChangeset, "")
 	}
+	// TODO  hooks.callAll("padLoad", { 'pad':  this });
 }
 
 func CleanText(text string) string {
@@ -211,33 +221,47 @@ func (p *Pad) SetText(newText string) {
 	newText = CleanText(newText)
 	oldText := p.GetText()
 	newTxtLen := len(newText)
-	var changeset string
+	chgset := changeset.ChangeSet{}
+	// create the changeset
+	// We want to ensure the pad still ends with a \n, but otherwise keep
+	// getText() and setText() consistent.
+	var cs string
 	if string([]rune(newText)[newTxtLen-1:newTxtLen]) == "\n" {
-		changeset  = changeset.make
+		cs = chgset.MakeSplice(oldText, 0, len(oldText), newText, "", "")
+	} else {
+		cs = chgset.MakeSplice(oldText, 0, len(oldText)-1, newText, "", "")
 	}
-
+	// append the changeset
+	p.appendRevision(cs, "")
 }
-func (p *Pad) appendText() {
-
-}
-func (p *Pad) init() {
-
-}
-func (p *Pad) copy() {
-
-}
-
-func (p *Pad) remove() {
-
+func (p *Pad) appendText(newText string) {
+	newText = CleanText(newText)
+	oldText := p.GetText()
+	chgset := changeset.ChangeSet{}
+	cs := chgset.MakeSplice(oldText, len(oldText), 0, newText, "", "")
+	p.appendRevision(cs, "")
 }
 
-func (p *Pad) setPublicStatus() {
+//appendChatMessage
+//getChatMessage
+// getChatMessages
 
-}
+//func (p *Pad) copy() {
+//}
 
-func (p *Pad) setPassword() {
+//func (p *Pad) remove() {
+//	padID := p.Id
+//	// kick everyone from this pad
+//
+//}
 
-}
+//func (p *Pad) setPublicStatus() {
+//
+//}
+//
+//func (p *Pad) setPassword() {
+//
+//}
 
 func (p *Pad) isCorrectPassword() {
 

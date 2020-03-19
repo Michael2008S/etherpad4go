@@ -6,6 +6,7 @@ import (
 	"github.com/Michael2008S/etherpad4go/api"
 	"github.com/Michael2008S/etherpad4go/model"
 	bgStore "github.com/Michael2008S/etherpad4go/store"
+	"github.com/Michael2008S/etherpad4go/utils/changeset"
 	"github.com/y0ssar1an/q"
 	"log"
 	"net/http"
@@ -178,6 +179,14 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, dbStore bgStore.S
 
 // 发送客户端数据：
 func sendClientVars(conn *websocket.Conn) {
+
+	// TODO pid
+	// load the pad-object from the database
+	pad := model.NewPad("q","")
+
+	atext := pad.AText
+	attribsForWire := changeset.Pre
+
 	clientVarsData := api.ClientVarsDataResp{}
 	clientVarsData.SkinName = "no-skin"
 	collabClientVars := api.CollabClientVars{
