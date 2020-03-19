@@ -7,6 +7,7 @@ import (
 	"github.com/Michael2008S/etherpad4go/utils/changeset"
 	"github.com/jinzhu/copier"
 	"log"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -52,7 +53,7 @@ func (rd *RevData) SaveToDatabase(p Pad) {
 	rd.dbStore.Set([]byte(PadKey+p.Id+PadRevisionKey+strconv.Itoa(p.Head)), jsonStr, 0)
 }
 
-func (p *Pad) Init() {
+func (p *Pad) Init(text string) {
 	value, found := p.dbStore.Get([]byte(PadKey + p.Id))
 	if found {
 		// TODO
@@ -60,7 +61,7 @@ func (p *Pad) Init() {
 	} else {
 		// this pad doesn't exist, so create it
 		cs := changeset.ChangeSet{}
-		firstChangeset := cs.MakeSplice("\n", 0, 0, CleanText(p.Text), "", "")
+		firstChangeset := cs.MakeSplice("\n", 0, 0, CleanText(text), "", "")
 		p.appendRevision(firstChangeset, "")
 	}
 }
@@ -86,7 +87,7 @@ func (p *Pad) getSavedRevisionsNumber() int {
 }
 
 func (p *Pad) getSavedRevisionsList() int {
-
+	return 0
 }
 
 func (p *Pad) appendRevision(aChangeset, author string) {
@@ -134,6 +135,12 @@ func (p *Pad) getLastEdit() RevData {
 	return revData
 }
 
+func (p *Pad) getRevision(revNum int) (revData RevData) {
+	data, _ := p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
+	json.Unmarshal(data, &revData)
+	return
+}
+
 func (p *Pad) getRevisionChangeset(revNum int) string {
 	revData := RevData{}
 	data, _ := p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
@@ -157,31 +164,57 @@ func (p *Pad) getRevisionDate(revNum int) int {
 
 func (p *Pad) getAllAuthors() (authors []string) {
 	for _, val := range p.Pool.NumToAttrib {
-	//	if val[0] == "author" && len(val[1]) > 0 {
-	//		authors = append(authors, val[1])
-	//	}
+		//	if val[0] == "author" && len(val[1]) > 0 {
+		//		authors = append(authors, val[1])
+		//	}
 		// TODO
 		log.Println(val)
 	}
 	return
 }
 
-func (p *Pad) getInternalRevisionAText() {
+func (p *Pad) getInternalRevisionAText(targetRev int) changeset.AText {
+	keyRev := p.getKeyRevisionNumber(targetRev)
+	// find out which changesets are needed
+	var neededChangesets []int
+	for curRev := keyRev; curRev < targetRev; curRev++ {
+		neededChangesets = append(neededChangesets, curRev)
+	}
+	// get all needed data out of the database
 
+	// start to get the atext of the key revision
+	revData := p.getRevision(targetRev)
+	var changesets map[int]string
+	for _, v := range neededChangesets {
+		data := p.getRevision(v)
+		changesets[v] = data.changeset
+	}
+
+	// apply all changesets to the key changeset
+	chgset := changeset.ChangeSet{}
+	atext := revData.meta.aText
+	for k, _ := range changesets {
+		cs := changesets[k]
+		atext = chgset.ApplyToAText(cs, atext, p.Pool)
+	}
+	return atext
 }
 
-func (p *Pad) getRevision() {
-
+func (p *Pad) getKeyRevisionNumber(revNum int) int {
+	return int(math.Floor(float64(revNum)/100) * 100)
 }
 
-func (p *Pad) getKeyRevisionNumber() {
-
+func (p *Pad) GetText() string {
+	return p.AText.Text
 }
-
-func (p *Pad) GetText() {
-
-}
-func (p *Pad) SetText() {
+func (p *Pad) SetText(newText string) {
+	newText = CleanText(newText)
+	oldText := p.GetText()
+	newTxtLen := len(newText)
+	var changeset string
+	if string([]rune(newText)[newTxtLen-1:newTxtLen]) == "\n" {
+		changeset  = changeset.make
+	}
 
 }
 func (p *Pad) appendText() {

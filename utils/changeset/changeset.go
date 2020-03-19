@@ -562,8 +562,8 @@ func ComposeAttributes(att1, att2 string, resultIsMutation bool, pool AttributeP
 	if len(att2) <= 0 {
 		return att1
 	}
-	var atts []int
-
+	//var atts []int
+	return ""
 }
 
 /**
