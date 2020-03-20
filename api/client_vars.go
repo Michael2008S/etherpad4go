@@ -57,13 +57,10 @@ type ClientVarsDataResp struct {
 }
 
 type CollabClientVars struct {
-	InitialAttributedText struct {
-		Text    string `json:"text"`
-		Attribs string `json:"attribs"`
-	} `json:"initialAttributedText"`
-	ClientIP             string `json:"clientIp"`
-	PadID                string `json:"padId"`
-	HistoricalAuthorData struct {
+	InitialAttributedText changeset.AText `json:"initialAttributedText"`
+	ClientIP              string          `json:"clientIp"`
+	PadID                 string          `json:"padId"`
+	HistoricalAuthorData  struct {
 		APy0WdSkbof4TM4DD struct {
 			Name    interface{} `json:"name"`
 			ColorID int         `json:"colorId"`

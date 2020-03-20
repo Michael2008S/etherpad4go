@@ -186,16 +186,15 @@ func sendClientVars(conn *websocket.Conn) {
 
 	atext := pad.AText
 	translated, newPool := changeset.PrepareForWire(atext.Attribs, pad.Pool)
-	apool := newPool.ToJsonAble
+	//apool := newPool.ToJsonAble
 	atext.Attribs = translated
+
+	//historicalAuthorData :=  map[string]
 
 	clientVarsData := api.ClientVarsDataResp{}
 	clientVarsData.SkinName = "no-skin"
 	collabClientVars := api.CollabClientVars{
-		InitialAttributedText: struct {
-			Text    string `json:"text"`
-			Attribs string `json:"attribs"`
-		}{Text: "asdfasdaff", Attribs: "|5+6b*0|3+7*0+4*1|2+2*1+c*0+c*1|3+j*0+4*1|3+9*0|1+r|1+1"},
+		InitialAttributedText: atext,
 		ClientIP: "127.0.0.1",
 		PadID:    "q",
 		HistoricalAuthorData: struct {
@@ -208,15 +207,9 @@ func sendClientVars(conn *websocket.Conn) {
 				ColorID string `json:"colorId"`
 			} `json:"a.YjK4P2yxGHx8NNgf"`
 		}{},
-		Apool: struct {
-			NumToAttrib struct {
-				Num0 []string `json:"0"`
-				Num1 []string `json:"1"`
-			} `json:"numToAttrib"`
-			NextNum int `json:"nextNum"`
-		}{},
-		Rev:  0,
-		Time: 0,
+		Apool: newPool,
+		Rev:   pad.GetHeadRevisionNumber(),
+		Time:  time.Now().Unix(),
 	}
 	clientVarsData.UserID = "123"
 	clientVarsData.CollabClientVars = collabClientVars

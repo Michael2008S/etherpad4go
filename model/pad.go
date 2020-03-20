@@ -88,7 +88,7 @@ func (p *Pad) apool() changeset.AttributePool {
 	return p.Pool
 }
 
-func (p *Pad) getHeadRevisionNumber() int {
+func (p *Pad) GetHeadRevisionNumber() int {
 	return p.Head
 }
 
@@ -139,7 +139,7 @@ func (p *Pad) saveToDatabase() {
 
 func (p *Pad) getLastEdit() RevData {
 	revData := RevData{}
-	revNum := p.getHeadRevisionNumber()
+	revNum := p.GetHeadRevisionNumber()
 	data, _ := p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
 	json.Unmarshal(data, &revData)
 	return revData
