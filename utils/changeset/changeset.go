@@ -773,12 +773,12 @@ func moveOpsToNewPool(cs string, oldPool, newPool AttributePool) string {
 	fromDollar := SubStrLen(cs, dollarPos, len(cs)) // FIXME
 	// order of attribs stays the same
 	rgx, _ := regexp.Compile(`\*([0-9a-z]+)`)
-	rgx.ReplaceAllString(upToDollar, func() {
-		oldNum := strconv.ParseInt()
-
-		return ""
-	}())
-	return strings.Replace()
+	a := rgx.FindString(upToDollar)
+	oldNum, _ := strconv.ParseInt(a, 36, 32)
+	pair := oldPool.GetAttrib(int(oldNum))
+	// TODO if(!pair) exports.error('Can\'t copy unknown attrib (reference attrib string to non-existant pool entry). Inconsistent attrib state!');
+	newNum := newPool.PutAttrib(strings.Join(pair, ","), false)
+	return rgx.ReplaceAllString(upToDollar, strconv.Itoa(newNum)) + fromDollar
 }
 
 /**
