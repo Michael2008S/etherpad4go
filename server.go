@@ -182,10 +182,12 @@ func sendClientVars(conn *websocket.Conn) {
 
 	// TODO pid
 	// load the pad-object from the database
-	pad := model.NewPad("q","")
+	pad := model.NewPad("q", "")
 
 	atext := pad.AText
-	attribsForWire := changeset.Pre
+	translated, newPool := changeset.PrepareForWire(atext.Attribs, pad.Pool)
+	apool := newPool.ToJsonAble
+	atext.Attribs = translated
 
 	clientVarsData := api.ClientVarsDataResp{}
 	clientVarsData.SkinName = "no-skin"

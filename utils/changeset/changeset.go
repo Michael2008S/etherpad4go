@@ -763,19 +763,21 @@ func characterRangeFollow() {
  * @param newPool {AttribPool} new attributes pool
  * @return {string} the new Changeset
  */
-func moveOpsToNewPool(cs string, oldPool, newPool AttributePool) string{
+func moveOpsToNewPool(cs string, oldPool, newPool AttributePool) string {
 	// works on exports or attribution string
 	dollarPos := strings.Index(cs, "$")
 	if dollarPos < 0 {
 		dollarPos = len(cs)
 	}
 	upToDollar := SubString(cs, 0, dollarPos)
-	fromDollar := SubStrLen(cs, dollarPos,len(cs)) // FIXME
+	fromDollar := SubStrLen(cs, dollarPos, len(cs)) // FIXME
 	// order of attribs stays the same
-	rgx := regexp.Compile(`\*([0-9a-z]+)`)
+	rgx, _ := regexp.Compile(`\*([0-9a-z]+)`)
 	rgx.ReplaceAllString(upToDollar, func() {
 		oldNum := strconv.ParseInt()
-	})
+
+		return ""
+	}())
 	return strings.Replace()
 }
 
@@ -884,9 +886,10 @@ func appendATextToAssembler() {
  * @param cs {Changeset}
  * @param pool {AtributePool}
  */
-func PrepareForWire(cs string, pool AttributePool) {
-	newPool := AttributePool{}
-	newCs := moveOpsToNewPool()
+func PrepareForWire(cs string, pool AttributePool) (translated string, newPool AttributePool) {
+	newPool = AttributePool{}
+	translated = moveOpsToNewPool(cs, pool, newPool)
+	return
 }
 
 /**

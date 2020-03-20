@@ -1,5 +1,7 @@
 package api
 
+import "github.com/Michael2008S/etherpad4go/utils/changeset"
+
 const (
 	MsgTypeClientVars = "CLIENT_VARS"
 )
@@ -71,15 +73,9 @@ type CollabClientVars struct {
 			ColorID string `json:"colorId"`
 		} `json:"a.YjK4P2yxGHx8NNgf"`
 	} `json:"historicalAuthorData"`
-	Apool struct {
-		NumToAttrib struct {
-			Num0 []string `json:"0"`
-			Num1 []string `json:"1"`
-		} `json:"numToAttrib"`
-		NextNum int `json:"nextNum"`
-	} `json:"apool"`
-	Rev  int   `json:"rev"`
-	Time int64 `json:"time"`
+	Apool changeset.AttributePool `json:"apool"`
+	Rev   int                     `json:"rev"`
+	Time  int64                   `json:"time"`
 }
 
 type PadOptions struct {

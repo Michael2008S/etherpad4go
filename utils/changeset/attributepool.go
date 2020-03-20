@@ -7,9 +7,9 @@ package changeset
 */
 
 type AttributePool struct {
-	NumToAttrib map[int]string // e.g. {0: ['foo','bar']}
-	AttribToNum map[string]int // e.g. {'foo,bar': 0}
-	NextNum     int
+	NumToAttrib map[int][]string `json:"numToAttrib"` // e.g. {0: ['foo','bar']}
+	AttribToNum map[string]int   `json:"-"`           // e.g. {'foo,bar': 0}
+	NextNum     int              `json:"nextNum"`
 }
 
 func (a *AttributePool) PutAttrib(attrib string, dontAddIfAbsent bool) int {
@@ -17,18 +17,17 @@ func (a *AttributePool) PutAttrib(attrib string, dontAddIfAbsent bool) int {
 	if found {
 		return num
 	}
-
 	if dontAddIfAbsent {
 		return -1
 	}
 	num = a.NextNum + 1
 	a.AttribToNum[attrib] = num
 	// FIXME  this.numToAttrib[num] = [String(attrib[0] || ''), String(attrib[1] || '')];
-	a.NumToAttrib[num] = attrib
+	a.NumToAttrib[num] = append(a.NumToAttrib[num], attrib)
 	return num
 }
 
-func (a *AttributePool) GetAttrib(num int) string {
+func (a *AttributePool) GetAttrib(num int) []string {
 	return a.NumToAttrib[num]
 }
 
