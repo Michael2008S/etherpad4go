@@ -48,8 +48,9 @@ type meta struct {
 	aText     changeset.AText `json:"atext"`
 }
 
-func NewPad(id, text string) Pad {
-	p := Pad{Id: id,}
+func NewPad(id, text string, db store.Store) Pad {
+	p := Pad{Id: id, dbStore: db}
+	p.Pool = changeset.NewAttributePool()
 	p.Init(text)
 	return p
 }

@@ -12,6 +12,14 @@ type AttributePool struct {
 	NextNum     int              `json:"nextNum"`
 }
 
+func NewAttributePool() AttributePool {
+	return AttributePool{
+		NumToAttrib: map[int][]string{},
+		AttribToNum: map[string]int{},
+		NextNum:     0,
+	}
+}
+
 func (a *AttributePool) PutAttrib(attrib string, dontAddIfAbsent bool) int {
 	num, found := a.AttribToNum[attrib]
 	if found {

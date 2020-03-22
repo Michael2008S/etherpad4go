@@ -169,7 +169,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, dbStore bgStore.S
 	client.dbStore = dbStore
 
 	// 发送 CLIENT_VARS 数据
-	sendClientVars(conn)
+	sendClientVars(conn, client.dbStore)
 
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.
@@ -178,11 +178,11 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, dbStore bgStore.S
 }
 
 // 发送客户端数据：
-func sendClientVars(conn *websocket.Conn) {
+func sendClientVars(conn *websocket.Conn, db bgStore.Store) {
 
 	// TODO pid
 	// load the pad-object from the database
-	pad := model.NewPad("q", "")
+	pad := model.NewPad("q", "", db)
 
 	atext := pad.AText
 	translated, newPool := changeset.PrepareForWire(atext.Attribs, pad.Pool)
@@ -195,8 +195,8 @@ func sendClientVars(conn *websocket.Conn) {
 	clientVarsData.SkinName = "no-skin"
 	collabClientVars := api.CollabClientVars{
 		InitialAttributedText: atext,
-		ClientIP: "127.0.0.1",
-		PadID:    "q",
+		ClientIP:              "127.0.0.1",
+		PadID:                 "q",
 		HistoricalAuthorData: struct {
 			APy0WdSkbof4TM4DD struct {
 				Name    interface{} `json:"name"`

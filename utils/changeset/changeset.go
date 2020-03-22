@@ -887,7 +887,7 @@ func appendATextToAssembler() {
  * @param pool {AtributePool}
  */
 func PrepareForWire(cs string, pool AttributePool) (translated string, newPool AttributePool) {
-	newPool = AttributePool{}
+	newPool = NewAttributePool()
 	translated = moveOpsToNewPool(cs, pool, newPool)
 	return
 }

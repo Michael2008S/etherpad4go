@@ -6,8 +6,8 @@ type PadMgr struct {
 	dbStore store.Store
 }
 
-func (p *PadMgr) GetPad(id, text string) Pad {
-	return NewPad(id, text)
+func (p *PadMgr) GetPad(id, text string, db store.Store) Pad {
+	return NewPad(id, text, db)
 }
 
 func (p *PadMgr) SavePad() {
