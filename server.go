@@ -185,6 +185,8 @@ func sendClientVars(conn *websocket.Conn, db bgStore.Store) {
 	pad := model.NewPad("q", "", db)
 
 	atext := pad.AText
+	atext.Attribs = "|4+2l"
+	atext.Text = "Welcome to Etherpad!\n\nThis pad text is synchronized~ https://github.com/ether/etherpad-lite\n\n"
 	translated, newPool := changeset.PrepareForWire(atext.Attribs, pad.Pool)
 	//apool := newPool.ToJsonAble
 	atext.Attribs = translated

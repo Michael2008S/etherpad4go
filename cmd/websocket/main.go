@@ -43,8 +43,6 @@ var upgrader = websocket.Upgrader{
 
 func main() {
 	flag.Parse()
-	hub := poker.NewHub()
-	go hub.Run()
 
 	// init badger db
 	dbStore, err := bgStore.NewBadgerStore("./var/badger")
@@ -52,6 +50,9 @@ func main() {
 		log.Println(err)
 		return
 	}
+
+	hub := poker.NewHub(dbStore)
+	go hub.Run()
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", serveHome)

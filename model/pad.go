@@ -2,7 +2,6 @@ package model
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Michael2008S/etherpad4go/store"
 	"github.com/Michael2008S/etherpad4go/utils/changeset"
 	"github.com/jinzhu/copier"
@@ -16,6 +15,10 @@ import (
 const (
 	PadKey         = "pad:"
 	PadRevisionKey = ":revs:"
+)
+
+const (
+	defaultPadText = `Welcome to Etherpad!\n\nThis pad text is synchronized~ https:\/\/github.com\/ether\/etherpad-lite\n`
 )
 
 type Pad struct {
@@ -67,8 +70,15 @@ func (p *Pad) Init(text string) {
 	if found {
 		// copy all attr. To a transfrom via fromJsonable if necassary
 		// TODO
-		fmt.Println(value)
+		log.Println(string(value))
+		err := json.Unmarshal(value, p)
+		if err != nil {
+			log.Println(err)
+		}
 	} else {
+		if text == "" {
+			text = defaultPadText
+		}
 		// this pad doesn't exist, so create it
 		cs := changeset.ChangeSet{}
 		firstChangeset := cs.MakeSplice("\n", 0, 0, CleanText(text), "", "")
