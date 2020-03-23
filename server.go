@@ -108,8 +108,9 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+
 		//q.Q("readPump_message_TrimSpace:", string(message))
-		c.hub.broadcast <- message
+		c.hub.broadcast <- InboundMsg{from: c, message: message}
 	}
 }
 
@@ -174,11 +175,13 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, dbStore bgStore.S
 	id := r.Header.Get("Sec-WebSocket-Key")
 	log.Printf("header: Sec-WebSocket-Key is \" %v \" \n", id)
 	client.ID = id
-	// 发送 CLIENT_VARS 数据
-	sendClientVars(conn, client.dbStore)
 
 	if websocket.IsWebSocketUpgrade(r) {
 		log.Println("收到websocket链接")
+
+		// 发送 CLIENT_VARS 数据
+		sendClientVars(conn, client.dbStore)
+
 	} else {
 		log.Println("您这也不是websocket啊")
 		w.Write([]byte(`您这也不是websocket啊`))

@@ -12,3 +12,13 @@ type CollabRoomReqMessage struct {
 		Apool     changeset.AttributePool `json:"apool"`
 	} `json:"data"`
 }
+
+type ClientReadyReq struct {
+	Component       string `json:"component"`
+	Type            string `json:"type"`
+	PadID           string `json:"padId"`
+	SessionID       string `json:"sessionID"`
+	Password        string `json:"password"`
+	Token           string `json:"token"`
+	ProtocolVersion int    `json:"protocolVersion"`
+}

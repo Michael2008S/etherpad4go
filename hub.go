@@ -16,7 +16,7 @@ type Hub struct {
 	clients map[*Client]bool
 
 	// Inbound messages from the clients.
-	broadcast chan []byte
+	broadcast chan InboundMsg
 
 	// Register requests from the clients.
 	register chan *Client
@@ -28,9 +28,14 @@ type Hub struct {
 	dbStore bgStore.Store
 }
 
+type InboundMsg struct {
+	from    *Client
+	message []byte
+}
+
 func NewHub(db bgStore.Store) *Hub {
 	return &Hub{
-		broadcast:  make(chan []byte),
+		broadcast:  make(chan InboundMsg),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
@@ -54,7 +59,7 @@ func (h *Hub) Run() {
 		case message := <-h.broadcast:
 
 			// 消息判断分发处理
-			q.Q("Run_broadcast:", string(message))
+			q.Q("Run_broadcast:", string(message.message))
 
 			responseMsg := h.handleMessage(message)
 			q.Q("Send_broadcast:", string(responseMsg))
@@ -71,8 +76,8 @@ func (h *Hub) Run() {
 	}
 }
 
-func (h *Hub) handleMessage(message []byte) []byte {
-	msgType := gojsonq.New().FromString(string(message)).Find("type")
+func (h *Hub) handleMessage(message InboundMsg) []byte {
+	msgType := gojsonq.New().FromString(string(message.message)).Find("type")
 	//
 	//accessStatus =  securityManager.checkAccess(padID, sessionCookie, token, password)
 
@@ -82,16 +87,17 @@ func (h *Hub) handleMessage(message []byte) []byte {
 
 	if msgType.(string) == "CLIENT_READY" {
 		//	handleClientReady(client, message);
-
-		//createSessionInfo()
+		clientReadyReq := api.ClientReadyReq{}
+		json.Unmarshal(message.message, &clientReadyReq)
+		createSessionInfo(message.from, clientReadyReq)
 		q.Q("createSessionInfo")
 	} else if msgType.(string) == "CHANGESET_REQ" {
 		//	handleChangesetRequest(client, message);
 	} else if msgType.(string) == "COLLABROOM" {
-		msgDataType := gojsonq.New().FromString(string(message)).Find("type")
+		msgDataType := gojsonq.New().FromString(string(message.message)).Find("type")
 		if msgDataType == "USER_CHANGES" {
 			// TODO padChannels.emit(message.padId, {client: client, message: message}); // add to pad queue
-			handleUserChanges(h.dbStore, message)
+			handleUserChanges(h.dbStore, message.message)
 		}
 	}
 
