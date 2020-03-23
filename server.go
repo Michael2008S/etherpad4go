@@ -66,6 +66,8 @@ const (
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
+	ID string
+
 	hub *Hub
 
 	// The websocket connection.
@@ -168,8 +170,20 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, dbStore bgStore.S
 	client.hub.register <- client
 	client.dbStore = dbStore
 
+	// 使用Sec-WebSocket-Key当链接key
+	id := r.Header.Get("Sec-WebSocket-Key")
+	log.Printf("header: Sec-WebSocket-Key is \" %v \" \n", id)
+	client.ID = id
 	// 发送 CLIENT_VARS 数据
 	sendClientVars(conn, client.dbStore)
+
+	if websocket.IsWebSocketUpgrade(r) {
+		log.Println("收到websocket链接")
+	} else {
+		log.Println("您这也不是websocket啊")
+		w.Write([]byte(`您这也不是websocket啊`))
+		return
+	}
 
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.
@@ -222,6 +236,7 @@ func sendClientVars(conn *websocket.Conn, db bgStore.Store) {
 	}
 	w, err := conn.NextWriter(websocket.TextMessage)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 	q.Q(clientVarsResp)

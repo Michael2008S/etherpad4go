@@ -5,6 +5,7 @@ import (
 	"github.com/Michael2008S/etherpad4go/api"
 	bgStore "github.com/Michael2008S/etherpad4go/store"
 	"github.com/y0ssar1an/q"
+	"log"
 )
 import "github.com/thedevsaddam/gojsonq"
 
@@ -42,11 +43,14 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
+			//q.Q("Hub Run client<-register", client)
+			log.Println("Hub Run client<-register:%+v", client)
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
 			}
+			log.Println("Hub Run client<-unregister", client)
 		case message := <-h.broadcast:
 
 			// 消息判断分发处理
@@ -78,6 +82,9 @@ func (h *Hub) handleMessage(message []byte) []byte {
 
 	if msgType.(string) == "CLIENT_READY" {
 		//	handleClientReady(client, message);
+
+		//createSessionInfo()
+		q.Q("createSessionInfo")
 	} else if msgType.(string) == "CHANGESET_REQ" {
 		//	handleChangesetRequest(client, message);
 	} else if msgType.(string) == "COLLABROOM" {
@@ -104,11 +111,12 @@ func handleUserChanges(db bgStore.Store, message []byte) []byte {
 	json.Unmarshal(message, &reqMsg)
 
 	// get all Vars we need
-	baseRev := reqMsg.Data.BaseRev
-	wireApool := reqMsg.Data.Apool
-	changeset := reqMsg.Data.Changeset
+	//baseRev := reqMsg.Data.BaseRev
+	//wireApool := reqMsg.Data.Apool
+	//changeset := reqMsg.Data.Changeset
 
 	// The client might disconnect between our callbacks. We should still
 	// finish processing the changeset, so keep a reference to the session.
-	thisSession :=
+	//thisSession := SessionInfo[client.ID]
+	return []byte("handleUserChanges")
 }
