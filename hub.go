@@ -9,6 +9,7 @@ import (
 	"github.com/Michael2008S/etherpad4go/utils/changeset"
 	"github.com/y0ssar1an/q"
 	"log"
+	"strings"
 )
 import "github.com/thedevsaddam/gojsonq"
 
@@ -67,19 +68,19 @@ func (h *Hub) Run() {
 			responseMsg := h.handleMessage(message)
 			q.Q("Send_broadcast:", string(responseMsg))
 
-			for client := range h.clients {
-				select {
-				case client.send <- responseMsg:
-				default:
-					close(client.send)
-					delete(h.clients, client)
-				}
-			}
+			//for client := range h.clients {
+			//	select {
+			//	case client.send <- responseMsg:
+			//	default:
+			//		close(client.send)
+			//		delete(h.clients, client)
+			//	}
+			//}
 		}
 	}
 }
 
-func (h *Hub) handleMessage(message InboundMsg) []byte {
+func (h *Hub) handleMessage(message InboundMsg) {
 	msgType := gojsonq.New().FromString(string(message.message)).Find("type")
 	//
 	//accessStatus =  securityManager.checkAccess(padID, sessionCookie, token, password)
@@ -104,7 +105,7 @@ func (h *Hub) handleMessage(message InboundMsg) []byte {
 		}
 	}
 
-	return []byte(`{"type":"error"}`)
+	//return []byte(`{"type":"error"}`)
 }
 
 func handleClientReady() {
@@ -115,7 +116,7 @@ func handleChangesetRequest() {
 
 }
 
-func handleUserChanges(msg InboundMsg) ([]byte, error) {
+func handleUserChanges(msg InboundMsg) error {
 	reqMsg := api.CollabRoomReqMessage{}
 	json.Unmarshal(msg.message, &reqMsg)
 
@@ -155,7 +156,7 @@ func handleUserChanges(msg InboundMsg) ([]byte, error) {
 		// and can be applied after "c".
 		if baseRev+1 == r && c == cs {
 			//FIXME client.json.send({disconnect:"badChangeset"});
-			return nil, errors.New("Won't apply USER_CHANGES, because it contains an already accepted changeset")
+			return  errors.New("Won't apply USER_CHANGES, because it contains an already accepted changeset")
 		}
 
 	}
@@ -164,36 +165,46 @@ func handleUserChanges(msg InboundMsg) ([]byte, error) {
 
 	pad.AppendRevision(cs, thisSession.author)
 
-	correctionChangeset := _correctMarkersInPad(pad.AText, pad.Pool)
-	if correctionChangeset {
-		pad.AppendRevision(correctionChangeset)
+	//correctionChangeset := _correctMarkersInPad(pad.AText, pad.Pool)
+	//if correctionChangeset {
+	//	pad.AppendRevision(correctionChangeset)
+	//}
+
+	// Make sure the pad always ends with an empty line.
+	if strings.LastIndex(pad.GetText(), "\n") != len(pad.GetText())-1 {
+		nlChangeset := chgset.MakeSplice(pad.GetText(), len(pad.GetText())-1, 0, "\n", "", "")
+		pad.AppendRevision(nlChangeset, "")
 	}
-
-	return []byte("handleUserChanges")
+	updatePadClients(pad)
 }
 
-func updatePadClients() {
+func updatePadClients(pad model.Pad) {
+	// skip this if no-one is on this pad
 
 }
 
+/**
+ * TODO Copied from the Etherpad Source Code. Don't know what this method does excatly...
+ */
 func _correctMarkersInPad(atext changeset.AText, pool changeset.AttributePool) string {
 	text := atext.Text
 	// collect char positions of line markers (e.g. bullets) in new atext
 	// that aren't at the start of a line
 	badMarkers := []string{}
 	iter := changeset.NewOperatorIterator(atext.Attribs, 0)
-	offset := 0
+	//offset := 0
 	for iter.HasNext() {
-		op := iter.Next()
+		//op := iter.Next()
 
 	}
 	if len(badMarkers) == 0 {
 		return ""
 	}
 	// create changeset that removes these bad markers
-	offset = 0
-    builder := changeset.NewBuilder(len(text))
+	//offset = 0
+	builder := changeset.NewBuilder(len(text))
 
+	return builder.ToString()
 }
 
 func DisconnectBadChangeset() {
