@@ -86,7 +86,7 @@ func (opIter *OperatorIterator) Next() Operator {
 	return op
 }
 
-func (opIter *OperatorIterator) hasNext() bool {
+func (opIter *OperatorIterator) HasNext() bool {
 	return len(opIter.rgxResult) > 0 && len(opIter.rgxResult[0]) > 0
 }
 
@@ -126,7 +126,7 @@ func (chgset *ChangeSet) CheckRep(cs string) (err error) {
 	calcNewLen := 0
 	numInserted := 0
 	iter := NewOperatorIterator(ops, 0)
-	for iter.hasNext() {
+	for iter.HasNext() {
 		op := iter.Next()
 		switch op.OpCode {
 		case "=":
@@ -227,7 +227,7 @@ func (soa *smartOpAssembler) append(op Operator) {
 	soa.lastOpcode = op.OpCode
 }
 
-func (soa *smartOpAssembler) appendOpWithText(opCode, text, attribs, pool string) {
+func (soa *smartOpAssembler) appendOpWithText(opCode, text, attribs string, pool AttributePool) {
 	op := Operator{}
 	op.OpCode = opCode
 	op.attribs = makeAttribsString(opCode, attribs, pool)
@@ -264,7 +264,7 @@ func (soa *smartOpAssembler) endDocument() {
 	soa.keepAssem.endDocument()
 }
 
-func (soa *smartOpAssembler) getLengthChange() int {
+func (soa *smartOpAssembler) GetLengthChange() int {
 	return soa.lengthChange
 }
 
@@ -491,11 +491,11 @@ func applyZip(in1, in2 string, idx1, idx2 int, aFunc func(Operator, Operator, Op
 	op1 := Operator{}
 	op2 := Operator{}
 	opOut := Operator{}
-	for len(op1.OpCode) > 0 || iter1.hasNext() || len(op2.OpCode) > 0 || iter2.hasNext() {
-		if len(op1.OpCode) <= 0 && iter1.hasNext() {
+	for len(op1.OpCode) > 0 || iter1.HasNext() || len(op2.OpCode) > 0 || iter2.HasNext() {
+		if len(op1.OpCode) <= 0 && iter1.HasNext() {
 			iter1.Next()
 		}
-		if len(op2.OpCode) <= 0 && iter2.hasNext() {
+		if len(op2.OpCode) <= 0 && iter2.HasNext() {
 			iter2.Next()
 		}
 		aFunc(op1, op2, opOut)
@@ -540,7 +540,7 @@ func (chgset *ChangeSet) ApplyToText(cs, str string) (string, error) {
 	strIter := NewStringIterator(str)
 	assem := stringAssembler{}
 
-	for csIter.hasNext() {
+	for csIter.HasNext() {
 		op := csIter.Next()
 		switch op.OpCode {
 		case "+":
@@ -974,11 +974,61 @@ func attribsAttributeValue() {
  * length oldLen. Allows to add/remove parts of it
  * @param oldLen {int} Old length
  */
-func Builder() {
-
+func NewBuilder(oldLen int) Builder {
+	return Builder{
+		oldLen:   oldLen,
+		assem:    smartOpAssembler{},
+		o:        Operator{},
+		charBank: stringAssembler{},
+	}
 }
 
-func makeAttribsString(opCode, attribs, pool string) string {
+type Builder struct {
+	oldLen   int
+	assem    smartOpAssembler
+	o        Operator
+	charBank stringAssembler
+}
+
+// attribs are [[key1,value1],[key2,value2],...] or '*0*1...' (no pool needed in latter case)
+func (b *Builder) Keep(N, L int, attribs string, pool AttributePool) {
+	b.o.OpCode = "="
+	//  FIXME     o.attribs = (attribs && exports.makeAttribsString('=', attribs, pool)) || '';
+	b.o.attribs = attribs
+	b.o.Chars = N
+	b.o.Lines = L
+	b.assem.append(b.o)
+}
+
+func (b *Builder) KeepText(text, attribs string, pool AttributePool) {
+	b.assem.appendOpWithText("=", text, attribs, pool)
+}
+
+func (b *Builder) Insert(text, attribs string, pool AttributePool) {
+	b.assem.appendOpWithText("+", text, attribs, pool)
+	b.charBank.append(text)
+}
+
+func (b *Builder) Remove(N, L int) {
+	b.o.OpCode = "-"
+	b.o.attribs = ""
+	b.o.Chars = N
+	b.o.Lines = L
+	b.assem.append(b.o)
+}
+
+func (b *Builder) ToString() string {
+	b.assem.endDocument()
+	newLen := b.oldLen + b.assem.GetLengthChange()
+	chgset := ChangeSet{}
+	chgset.OldLen = b.oldLen
+	chgset.NewLen = newLen
+	chgset.Ops = b.assem.toString()
+	chgset.CharBank = b.charBank.toString()
+	return chgset.Pack()
+}
+
+func makeAttribsString(opCode, attribs string, pool AttributePool) string {
 	// makeAttribsString(opcode, '*3') or makeAttribsString(opcode, [['foo','bar']], myPool) work
 	if len(opCode) <= 0 {
 		return ""

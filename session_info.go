@@ -9,6 +9,7 @@ type authInfo struct {
 	padID     string
 	token     string
 	password  string
+	author    string
 }
 
 func init() {

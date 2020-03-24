@@ -82,7 +82,7 @@ func (p *Pad) Init(text string) {
 		// this pad doesn't exist, so create it
 		cs := changeset.ChangeSet{}
 		firstChangeset := cs.MakeSplice("\n", 0, 0, CleanText(text), "", "")
-		p.appendRevision(firstChangeset, "")
+		p.AppendRevision(firstChangeset, "")
 	}
 	// TODO  hooks.callAll("padLoad", { 'pad':  this });
 }
@@ -111,7 +111,7 @@ func (p *Pad) getSavedRevisionsList() int {
 	return 0
 }
 
-func (p *Pad) appendRevision(aChangeset, author string) {
+func (p *Pad) AppendRevision(aChangeset, author string) error {
 	cs := changeset.ChangeSet{}
 	newAText := cs.ApplyToAText(aChangeset, p.AText, p.Pool)
 	copier.Copy(p.AText, newAText)
@@ -141,6 +141,7 @@ func (p *Pad) appendRevision(aChangeset, author string) {
 	//} else {
 	//	hooks.callAll("padUpdate", {'pad':this, 'author': author});
 	//}
+	return nil
 }
 
 func (p *Pad) saveToDatabase() {
@@ -162,7 +163,7 @@ func (p *Pad) getRevision(revNum int) (revData RevData) {
 	return
 }
 
-func (p *Pad) getRevisionChangeset(revNum int) string {
+func (p *Pad) GetRevisionChangeset(revNum int) string {
 	revData := RevData{}
 	data, _ := p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
 	json.Unmarshal(data, &revData)
@@ -243,14 +244,14 @@ func (p *Pad) SetText(newText string) {
 		cs = chgset.MakeSplice(oldText, 0, len(oldText)-1, newText, "", "")
 	}
 	// append the changeset
-	p.appendRevision(cs, "")
+	p.AppendRevision(cs, "")
 }
 func (p *Pad) appendText(newText string) {
 	newText = CleanText(newText)
 	oldText := p.GetText()
 	chgset := changeset.ChangeSet{}
 	cs := chgset.MakeSplice(oldText, len(oldText), 0, newText, "", "")
-	p.appendRevision(cs, "")
+	p.AppendRevision(cs, "")
 }
 
 //appendChatMessage

@@ -2,9 +2,11 @@ package poker
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/Michael2008S/etherpad4go/api"
 	"github.com/Michael2008S/etherpad4go/model"
 	bgStore "github.com/Michael2008S/etherpad4go/store"
+	"github.com/Michael2008S/etherpad4go/utils/changeset"
 	"github.com/y0ssar1an/q"
 	"log"
 )
@@ -113,20 +115,87 @@ func handleChangesetRequest() {
 
 }
 
-func handleUserChanges(msg InboundMsg) []byte {
+func handleUserChanges(msg InboundMsg) ([]byte, error) {
 	reqMsg := api.CollabRoomReqMessage{}
 	json.Unmarshal(msg.message, &reqMsg)
 
 	// get all Vars we need
 	baseRev := reqMsg.Data.BaseRev
 	wireApool := reqMsg.Data.Apool
-	changeset := reqMsg.Data.Changeset
+	cs := reqMsg.Data.Changeset
 
 	// The client might disconnect between our callbacks. We should still
 	// finish processing the changeset, so keep a reference to the session.
 	thisSession := sessionInfo[msg.from.ID]
 	pad := model.NewPad(thisSession.padID, "", msg.from.dbStore)
 	// Verify that the changeset has valid syntax and is in canonical form
+	chgset := changeset.ChangeSet{}
+	if err := chgset.CheckRep(cs); err != nil {
+		log.Println(err)
+		//return nil
+	}
+	// Verify that the attribute indexes used in the changeset are all
+	// defined in the accompanying attribute pool.
+	//chgset.EachAttribNumber(cs)
+
+	// Validate all added 'author' attribs to be the same value as the current user
+
+	// ex. applyUserChanges
+	apool := pad.Pool
+	r := baseRev
+
+	// The client's changeset might not be based on the latest revision,
+	// since other clients are sending changes at the same time.
+	// Update the changeset so that it can be applied to the latest revision.
+	for ; r < pad.GetHeadRevisionNumber(); r++ {
+		c := pad.GetRevisionChangeset(r)
+		// At this point, both "c" (from the pad) and "changeset" (from the
+		// client) are relative to revision r - 1. The follow function
+		// rebases "changeset" so that it is relative to revision r
+		// and can be applied after "c".
+		if baseRev+1 == r && c == cs {
+			//FIXME client.json.send({disconnect:"badChangeset"});
+			return nil, errors.New("Won't apply USER_CHANGES, because it contains an already accepted changeset")
+		}
+
+	}
+
+	prevText := pad.GetText()
+
+	pad.AppendRevision(cs, thisSession.author)
+
+	correctionChangeset := _correctMarkersInPad(pad.AText, pad.Pool)
+	if correctionChangeset {
+		pad.AppendRevision(correctionChangeset)
+	}
 
 	return []byte("handleUserChanges")
+}
+
+func updatePadClients() {
+
+}
+
+func _correctMarkersInPad(atext changeset.AText, pool changeset.AttributePool) string {
+	text := atext.Text
+	// collect char positions of line markers (e.g. bullets) in new atext
+	// that aren't at the start of a line
+	badMarkers := []string{}
+	iter := changeset.NewOperatorIterator(atext.Attribs, 0)
+	offset := 0
+	for iter.HasNext() {
+		op := iter.Next()
+
+	}
+	if len(badMarkers) == 0 {
+		return ""
+	}
+	// create changeset that removes these bad markers
+	offset = 0
+    builder := changeset.NewBuilder(len(text))
+
+}
+
+func DisconnectBadChangeset() {
+
 }
