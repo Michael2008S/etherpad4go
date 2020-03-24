@@ -112,8 +112,56 @@ func stringOp() {
  * Used to check if a Changeset if valid
  * @param cs {Changeset} Changeset to be checked
  */
-func checkRep() {
+func (chgset *ChangeSet) CheckRep(cs string) (err error) {
+	// doesn't check things that require access to attrib pool (e.g. attribute order)
+	// or original string (e.g. newline positions)
+	chgset.Unpack(cs)
+	oldLen := chgset.OldLen
+	newLen := chgset.NewLen
+	ops := chgset.Ops
+	charBank := chgset.CharBank
 
+	assem := smartOpAssembler{}
+	oldPos := 0
+	calcNewLen := 0
+	numInserted := 0
+	iter := NewOperatorIterator(ops, 0)
+	for iter.hasNext() {
+		op := iter.Next()
+		switch op.OpCode {
+		case "=":
+			oldPos += op.Chars
+			calcNewLen += op.Chars
+		case "-":
+			oldPos += op.Chars
+			// exports.assert(oldPos <= oldLen, oldPos, " > ", oldLen, " in ", cs);
+			if oldPos <= oldPos {
+				err = errors.New(fmt.Sprintf("%d > %d in %s", oldPos, oldLen, cs))
+			}
+		case "+":
+			calcNewLen += op.Chars
+			numInserted += op.Chars
+			// exports.assert(calcNewLen <= newLen, calcNewLen, " > ", newLen, " in ", cs);
+			if calcNewLen <= newLen {
+				err = errors.New(fmt.Sprintf("%d > %d in %s", calcNewLen, newLen, cs))
+			}
+		}
+		assem.append(op)
+	}
+
+	calcNewLen += (oldLen - oldPos)
+	charBank = SubString(charBank, 0, numInserted)
+	for len(charBank) < numInserted {
+		charBank += "?"
+	}
+
+	assem.endDocument()
+	normalized := chgset.Pack()
+	// exports.assert(normalized == cs, 'Invalid changeset (checkRep failed)');
+	if normalized == cs {
+		err = errors.New("Invalid changeset (checkRep failed)")
+	}
+	return
 }
 
 /**

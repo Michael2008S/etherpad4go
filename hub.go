@@ -3,6 +3,7 @@ package poker
 import (
 	"encoding/json"
 	"github.com/Michael2008S/etherpad4go/api"
+	"github.com/Michael2008S/etherpad4go/model"
 	bgStore "github.com/Michael2008S/etherpad4go/store"
 	"github.com/y0ssar1an/q"
 	"log"
@@ -97,7 +98,7 @@ func (h *Hub) handleMessage(message InboundMsg) []byte {
 		msgDataType := gojsonq.New().FromString(string(message.message)).Find("type")
 		if msgDataType == "USER_CHANGES" {
 			// TODO padChannels.emit(message.padId, {client: client, message: message}); // add to pad queue
-			handleUserChanges(h.dbStore, message.message)
+			handleUserChanges(message)
 		}
 	}
 
@@ -112,17 +113,20 @@ func handleChangesetRequest() {
 
 }
 
-func handleUserChanges(db bgStore.Store, message []byte) []byte {
+func handleUserChanges(msg InboundMsg) []byte {
 	reqMsg := api.CollabRoomReqMessage{}
-	json.Unmarshal(message, &reqMsg)
+	json.Unmarshal(msg.message, &reqMsg)
 
 	// get all Vars we need
-	//baseRev := reqMsg.Data.BaseRev
-	//wireApool := reqMsg.Data.Apool
-	//changeset := reqMsg.Data.Changeset
+	baseRev := reqMsg.Data.BaseRev
+	wireApool := reqMsg.Data.Apool
+	changeset := reqMsg.Data.Changeset
 
 	// The client might disconnect between our callbacks. We should still
 	// finish processing the changeset, so keep a reference to the session.
-	//thisSession := SessionInfo[client.ID]
+	thisSession := sessionInfo[msg.from.ID]
+	pad := model.NewPad(thisSession.padID, "", msg.from.dbStore)
+	// Verify that the changeset has valid syntax and is in canonical form
+
 	return []byte("handleUserChanges")
 }
