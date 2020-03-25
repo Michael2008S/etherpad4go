@@ -29,7 +29,7 @@ type AuthorMgr struct {
 type Author struct {
 	ColorID   int    `json:"colorId"`
 	Name      string `json:"name"`
-	Timestamp int64  `json:"timestamp"`
+	Timestamp int64  `json:"Timestamp"`
 }
 
 func (a *AuthorMgr) DoesAuthorExist(authorID string) bool {
@@ -70,7 +70,7 @@ func (a *AuthorMgr) mapAuthorWithDBKey(mapperKey, mapper string) string {
 		authorID = a.CreateAuthor("")
 		a.dbStore.Set([]byte(mapperKey+":"+mapper), []byte(authorID), 0)
 	}
-	//TODO  update the timestamp of this author
+	//TODO  update the Timestamp of this Author
 	return authorID
 }
 

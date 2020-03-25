@@ -42,12 +42,12 @@ type SavedRevision struct {
 
 type RevData struct {
 	dbStore   store.Store `json:"-"`
-	changeset string      `json:"changeset"`
-	meta      meta        `json:"meta"`
+	Changeset string      `json:"Changeset"`
+	Meta      meta        `json:"Meta"`
 }
 type meta struct {
-	author    string          `json:"author"`
-	timestamp int             `json:"timestamp"`
+	Author    string          `json:"Author"`
+	Timestamp int             `json:"Timestamp"`
 	aText     changeset.AText `json:"atext"`
 }
 
@@ -116,20 +116,20 @@ func (p *Pad) AppendRevision(aChangeset, author string) error {
 	newAText := cs.ApplyToAText(aChangeset, p.AText, p.Pool)
 	copier.Copy(p.AText, newAText)
 	newRevData := RevData{
-		changeset: aChangeset,
-		meta: meta{
-			author:    author,
-			timestamp: int(time.Now().Unix()),
+		Changeset: aChangeset,
+		Meta: meta{
+			Author:    author,
+			Timestamp: int(time.Now().Unix()),
 		},
 	}
 	// ex. getNumForAuthor
 	if len(author) > 0 {
-		p.Pool.PutAttrib("author", true)
+		p.Pool.PutAttrib("Author", true)
 	}
 	p.Head++
 	newRev := p.Head
 	if newRev%100 == 0 {
-		newRevData.meta.aText = p.AText
+		newRevData.Meta.aText = p.AText
 	}
 	jsonStr, _ := json.Marshal(newRevData)
 	p.dbStore.Set([]byte(PadKey+p.Id+PadRevisionKey+strconv.Itoa(newRev)), jsonStr, 0)
@@ -137,9 +137,9 @@ func (p *Pad) AppendRevision(aChangeset, author string) error {
 
 	// TODO
 	//if (this.head == 0) {
-	//	hooks.callAll("padCreate", {'pad':this, 'author': author});
+	//	hooks.callAll("padCreate", {'pad':this, 'Author': Author});
 	//} else {
-	//	hooks.callAll("padUpdate", {'pad':this, 'author': author});
+	//	hooks.callAll("padUpdate", {'pad':this, 'Author': Author});
 	//}
 	return nil
 }
@@ -157,7 +157,7 @@ func (p *Pad) getLastEdit() RevData {
 	return revData
 }
 
-func (p *Pad) getRevision(revNum int) (revData RevData) {
+func (p *Pad) GetRevision(revNum int) (revData RevData) {
 	data, _ := p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
 	json.Unmarshal(data, &revData)
 	return
@@ -167,26 +167,26 @@ func (p *Pad) GetRevisionChangeset(revNum int) string {
 	revData := RevData{}
 	data, _ := p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
 	json.Unmarshal(data, &revData)
-	return revData.changeset
+	return revData.Changeset
 }
 
 func (p *Pad) getRevisionAuthor(revNum int) string {
 	revData := RevData{}
 	data, _ := p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
 	json.Unmarshal(data, &revData)
-	return revData.meta.author
+	return revData.Meta.Author
 }
 
 func (p *Pad) getRevisionDate(revNum int) int {
 	revData := RevData{}
 	data, _ := p.dbStore.Get([]byte(PadKey + p.Id + PadRevisionKey + strconv.Itoa(revNum)))
 	json.Unmarshal(data, &revData)
-	return revData.meta.timestamp
+	return revData.Meta.Timestamp
 }
 
 func (p *Pad) getAllAuthors() (authors []string) {
 	for _, val := range p.Pool.NumToAttrib {
-		//	if val[0] == "author" && len(val[1]) > 0 {
+		//	if val[0] == "Author" && len(val[1]) > 0 {
 		//		authors = append(authors, val[1])
 		//	}
 		// TODO
@@ -205,16 +205,16 @@ func (p *Pad) getInternalRevisionAText(targetRev int) changeset.AText {
 	// get all needed data out of the database
 
 	// start to get the atext of the key revision
-	revData := p.getRevision(targetRev)
+	revData := p.GetRevision(targetRev)
 	var changesets map[int]string
 	for _, v := range neededChangesets {
-		data := p.getRevision(v)
-		changesets[v] = data.changeset
+		data := p.GetRevision(v)
+		changesets[v] = data.Changeset
 	}
 
-	// apply all changesets to the key changeset
+	// apply all changesets to the key Changeset
 	chgset := changeset.ChangeSet{}
-	atext := revData.meta.aText
+	atext := revData.Meta.aText
 	for k, _ := range changesets {
 		cs := changesets[k]
 		atext = chgset.ApplyToAText(cs, atext, p.Pool)
@@ -234,7 +234,7 @@ func (p *Pad) SetText(newText string) {
 	oldText := p.GetText()
 	newTxtLen := len(newText)
 	chgset := changeset.ChangeSet{}
-	// create the changeset
+	// create the Changeset
 	// We want to ensure the pad still ends with a \n, but otherwise keep
 	// getText() and setText() consistent.
 	var cs string
@@ -243,7 +243,7 @@ func (p *Pad) SetText(newText string) {
 	} else {
 		cs = chgset.MakeSplice(oldText, 0, len(oldText)-1, newText, "", "")
 	}
-	// append the changeset
+	// append the Changeset
 	p.AppendRevision(cs, "")
 }
 func (p *Pad) appendText(newText string) {

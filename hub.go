@@ -10,6 +10,7 @@ import (
 	"github.com/y0ssar1an/q"
 	"log"
 	"strings"
+	"time"
 )
 import "github.com/thedevsaddam/gojsonq"
 
@@ -17,7 +18,8 @@ import "github.com/thedevsaddam/gojsonq"
 // clients.
 type Hub struct {
 	// Registered clients.
-	clients map[*Client]bool
+	//clients map[*Client]bool
+	clients map[string]*Client
 
 	// Inbound messages from the clients.
 	broadcast chan InboundMsg
@@ -42,7 +44,7 @@ func NewHub(db bgStore.Store) *Hub {
 		broadcast:  make(chan InboundMsg),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		clients:    make(map[*Client]bool),
+		clients:    make(map[string]*Client),
 		dbStore:    db,
 	}
 }
@@ -51,12 +53,12 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
-			h.clients[client] = true
+			h.clients[client.ID] = client
 			//q.Q("Hub Run client<-register", client)
 			log.Println("Hub Run client<-register:%+v", client)
 		case client := <-h.unregister:
-			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
+			if _, ok := h.clients[client.ID]; ok {
+				delete(h.clients, client.ID)
 				close(client.send)
 			}
 			log.Println("Hub Run client<-unregister", client)
@@ -65,8 +67,11 @@ func (h *Hub) Run() {
 			// 消息判断分发处理
 			q.Q("Run_broadcast:", string(message.message))
 
-			responseMsg := h.handleMessage(message)
-			q.Q("Send_broadcast:", string(responseMsg))
+			err := h.handleMessage(message)
+			if err != nil {
+
+			}
+			//q.Q("Send_broadcast:", string(responseMsg))
 
 			//for client := range h.clients {
 			//	select {
@@ -80,7 +85,7 @@ func (h *Hub) Run() {
 	}
 }
 
-func (h *Hub) handleMessage(message InboundMsg) {
+func (h *Hub) handleMessage(message InboundMsg) error {
 	msgType := gojsonq.New().FromString(string(message.message)).Find("type")
 	//
 	//accessStatus =  securityManager.checkAccess(padID, sessionCookie, token, password)
@@ -101,11 +106,12 @@ func (h *Hub) handleMessage(message InboundMsg) {
 		msgDataType := gojsonq.New().FromString(string(message.message)).Find("type")
 		if msgDataType == "USER_CHANGES" {
 			// TODO padChannels.emit(message.padId, {client: client, message: message}); // add to pad queue
-			handleUserChanges(message)
+			h.handleUserChanges(message)
 		}
 	}
 
 	//return []byte(`{"type":"error"}`)
+	return nil
 }
 
 func handleClientReady() {
@@ -116,7 +122,7 @@ func handleChangesetRequest() {
 
 }
 
-func handleUserChanges(msg InboundMsg) error {
+func (h *Hub) handleUserChanges(msg InboundMsg) error {
 	reqMsg := api.CollabRoomReqMessage{}
 	json.Unmarshal(msg.message, &reqMsg)
 
@@ -156,7 +162,7 @@ func handleUserChanges(msg InboundMsg) error {
 		// and can be applied after "c".
 		if baseRev+1 == r && c == cs {
 			//FIXME client.json.send({disconnect:"badChangeset"});
-			return  errors.New("Won't apply USER_CHANGES, because it contains an already accepted changeset")
+			return errors.New("Won't apply USER_CHANGES, because it contains an already accepted changeset")
 		}
 
 	}
@@ -175,12 +181,111 @@ func handleUserChanges(msg InboundMsg) error {
 		nlChangeset := chgset.MakeSplice(pad.GetText(), len(pad.GetText())-1, 0, "\n", "", "")
 		pad.AppendRevision(nlChangeset, "")
 	}
-	updatePadClients(pad)
+	h.updatePadClients(&pad)
+
+	return nil
 }
 
-func updatePadClients(pad model.Pad) {
+func (h *Hub) updatePadClients(pad *model.Pad) {
 	// skip this if no-one is on this pad
+	roomClients := _getRoomClients(pad.Id)
+	if len(roomClients) == 0 {
+		return
+	}
 
+	// since all clients usually get the same set of changesets, store them in local cache
+	// to remove unnecessary roundtrip to the datalayer
+	// NB: note below possibly now accommodated via the change to promises/async
+	// TODO: in REAL world, if we're working without datalayer cache, all requests to revisions will be fired
+	// BEFORE first result will be landed to our cache object. The solution is to replace parallel processing
+	// via async.forEach with sequential for() loop. There is no real benefits of running this in parallel,
+	// but benefit of reusing cached revision object is HUGE
+
+	revCache := make(map[int]model.RevData)
+
+	for _, sid := range roomClients {
+		val, ok := sessionInfo[sid]
+		for ok && val.rev < pad.GetHeadRevisionNumber() {
+			val.rev += 1
+			r := val.rev
+			revision, ok := revCache[r]
+			if !ok {
+				revision = pad.GetRevision(r)
+				revCache[r] = revision
+			}
+			author := revision.Meta.Author
+			revChangeset := revision.Changeset
+			currentTime := revision.Meta.Timestamp
+
+			// next if session has not been deleted
+			if _, ok := sessionInfo[sid]; !ok {
+				continue
+			}
+
+			if author == sessionInfo[sid].author {
+				// 发给自己的确认信息
+				resp := api.CollabRoomAcceptCommitResp{
+					Type: "COLLABROOM",
+					Data: struct {
+						Type   string `json:"type"`
+						NewRev int    `json:"newRev"`
+					}{Type: "ACCEPT_COMMIT",
+						NewRev: r},
+				}
+				responseMsg, _ := json.Marshal(&resp)
+				client, _ := h.clients[sid]
+				if client != nil {
+					select {
+					case client.send <- responseMsg:
+					default:
+						close(client.send)
+						delete(h.clients, client.ID)
+					}
+				}
+			} else {
+				translated, pool := changeset.PrepareForWire(revChangeset, pad.Pool)
+				wireMsg := api.CollabRoomNewChangesResp{
+					Type: "COLLABROOM",
+					Data: struct {
+						Type        string                  `json:"type"`
+						NewRev      int                     `json:"newRev"`
+						Changeset   string                  `json:"changeset"`
+						Apool       changeset.AttributePool `json:"apool"`
+						Author      string                  `json:"author"`
+						CurrentTime int                     `json:"currentTime"`
+						TimeDelta   int                     `json:"timeDelta"`
+					}{Type: "NEW_CHANGES",
+						NewRev:      r,
+						Changeset:   translated,
+						Apool:       pool,
+						Author:      author,
+						CurrentTime: currentTime,
+						TimeDelta:   int(time.Now().Unix()) - currentTime},
+				}
+				responseMsg, _ := json.Marshal(&wireMsg)
+				client, _ := h.clients[sid]
+				if client != nil {
+					select {
+					case client.send <- responseMsg:
+					default:
+						close(client.send)
+						delete(h.clients, client.ID)
+					}
+				}
+			}
+		}
+	}
+
+}
+
+func _getRoomClients(padID string) []string {
+	var roomClientIDs []string
+	for k, v := range sessionInfo {
+		if v.padID == padID {
+			roomClientIDs = append(roomClientIDs, k)
+		}
+	}
+	return roomClientIDs
 }
 
 /**

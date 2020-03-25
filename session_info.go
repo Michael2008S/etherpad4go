@@ -10,6 +10,7 @@ type authInfo struct {
 	token     string
 	password  string
 	author    string
+	rev       int
 }
 
 func init() {

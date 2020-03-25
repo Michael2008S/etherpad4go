@@ -22,3 +22,24 @@ type ClientReadyReq struct {
 	Token           string `json:"token"`
 	ProtocolVersion int    `json:"protocolVersion"`
 }
+
+type CollabRoomAcceptCommitResp struct {
+	Type string `json:"type"`
+	Data struct {
+		Type   string `json:"type"`
+		NewRev int    `json:"newRev"`
+	} `json:"data"`
+}
+
+type CollabRoomNewChangesResp struct {
+	Type string `json:"type"`
+	Data struct {
+		Type        string                  `json:"type"`
+		NewRev      int                     `json:"newRev"`
+		Changeset   string                  `json:"changeset"`
+		Apool       changeset.AttributePool `json:"apool"`
+		Author      string                  `json:"author"`
+		CurrentTime int                     `json:"currentTime"`
+		TimeDelta   int                     `json:"timeDelta"`
+	} `json:"data"`
+}
