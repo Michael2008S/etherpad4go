@@ -252,7 +252,7 @@ func sendClientVars(client *Client, db bgStore.Store) {
 	authInfo, ok := sessionInfo[client.ID]
 	if ok {
 		authInfo.rev = pad.GetHeadRevisionNumber()
-		sessionInfo[client.ID] = authInfo
+		//sessionInfo[client.ID]= authInfo
 	}
 
 	// TODO  // prepare the notification for the other users on the pad, that this user joined

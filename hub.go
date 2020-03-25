@@ -107,7 +107,7 @@ func (h *Hub) handleMessage(message InboundMsg) error {
 		authInfo, ok := sessionInfo[message.from.ID]
 		if ok {
 			authInfo.author = author
-			sessionInfo[message.from.ID] = authInfo
+			//sessionInfo[message.from.ID] = authInfo
 		}
 		q.Q(sessionInfo)
 	} else if msgType.(string) == "CHANGESET_REQ" {
@@ -216,8 +216,10 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 	revCache := make(map[int]model.RevData)
 
 	for _, sid := range roomClients {
+		q.Q("roomClients--> ", sid)
 		val, ok := sessionInfo[sid]
 		for ok && val.rev < pad.GetHeadRevisionNumber() {
+
 			val.rev += 1
 			r := val.rev
 			revision, ok := revCache[r]
@@ -254,15 +256,6 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 					}
 					w.Write(responseMsg)
 				}
-
-				//if client != nil {
-				//	select {
-				//	case client.send <- responseMsg:
-				//	default:
-				//		close(client.send)
-				//		delete(h.clients, client.ID)
-				//	}
-				//}
 			} else {
 				translated, pool := changeset.PrepareForWire(revChangeset, pad.Pool)
 				wireMsg := api.CollabRoomNewChangesResp{
@@ -293,15 +286,6 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 					}
 					w.Write(responseMsg)
 				}
-
-				//if client != nil {
-				//	select {
-				//	case client.send <- responseMsg:
-				//	default:
-				//		close(client.send)
-				//		delete(h.clients, client.ID)
-				//	}
-				//}
 			}
 		}
 	}

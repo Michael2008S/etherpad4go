@@ -1084,7 +1084,7 @@ exports._slicerZipperFunc = function (attOp, csOp, opOut, pool) {
           csOp.chars -= attOp.chars;
           csOp.lines -= attOp.lines;
           attOp.opcode = '';
-        }composeAttributes
+        }
         break;
       }
     case '+':

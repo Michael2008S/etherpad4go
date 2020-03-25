@@ -2,7 +2,7 @@ package poker
 
 import "github.com/Michael2008S/etherpad4go/api"
 
-var sessionInfo map[string]authInfo
+var sessionInfo map[string]*authInfo
 
 type authInfo struct {
 	sessionID string
@@ -14,7 +14,7 @@ type authInfo struct {
 }
 
 func init() {
-	sessionInfo = make(map[string]authInfo, 1)
+	sessionInfo = make(map[string]*authInfo, 1)
 }
 
 func createSessionInfo(client *Client, req api.ClientReadyReq) {
@@ -24,7 +24,7 @@ func createSessionInfo(client *Client, req api.ClientReadyReq) {
 	// the sessionId of this connection is still valid
 	// since it could have been deleted by the API.
 	//auth :=
-	sessionInfo[client.ID] = authInfo{
+	sessionInfo[client.ID] = &authInfo{
 		sessionID: req.SessionID,
 		padID:     req.PadID,
 		token:     req.Token,
