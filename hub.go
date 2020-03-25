@@ -7,6 +7,7 @@ import (
 	"github.com/Michael2008S/etherpad4go/model"
 	bgStore "github.com/Michael2008S/etherpad4go/store"
 	"github.com/Michael2008S/etherpad4go/utils/changeset"
+	"github.com/gorilla/websocket"
 	"github.com/y0ssar1an/q"
 	"log"
 	"strings"
@@ -189,7 +190,7 @@ func (h *Hub) handleUserChanges(msg InboundMsg) error {
 	// Make sure the pad always ends with an empty line.
 	if strings.LastIndex(pad.GetText(), "\n") != len(pad.GetText())-1 {
 		nlChangeset := chgset.MakeSplice(pad.GetText(), len(pad.GetText())-1, 0, "\n", "", "")
-		pad.AppendRevision(nlChangeset, "")
+		pad.AppendRevision(nlChangeset, thisSession.author)
 	}
 	h.updatePadClients(&pad)
 
@@ -244,15 +245,24 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 						NewRev: r},
 				}
 				responseMsg, _ := json.Marshal(&resp)
-				client, _ := h.clients[sid]
-				if client != nil {
-					select {
-					case client.send <- responseMsg:
-					default:
-						close(client.send)
-						delete(h.clients, client.ID)
+				client, ok := h.clients[sid]
+				if ok {
+					w, err := client.conn.NextWriter(websocket.TextMessage)
+					if err != nil {
+						log.Println(err)
+						return
 					}
+					w.Write(responseMsg)
 				}
+
+				//if client != nil {
+				//	select {
+				//	case client.send <- responseMsg:
+				//	default:
+				//		close(client.send)
+				//		delete(h.clients, client.ID)
+				//	}
+				//}
 			} else {
 				translated, pool := changeset.PrepareForWire(revChangeset, pad.Pool)
 				wireMsg := api.CollabRoomNewChangesResp{
@@ -274,15 +284,24 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 						TimeDelta:   int(time.Now().Unix()) - currentTime},
 				}
 				responseMsg, _ := json.Marshal(&wireMsg)
-				client, _ := h.clients[sid]
-				if client != nil {
-					select {
-					case client.send <- responseMsg:
-					default:
-						close(client.send)
-						delete(h.clients, client.ID)
+				client, ok := h.clients[sid]
+				if ok {
+					w, err := client.conn.NextWriter(websocket.TextMessage)
+					if err != nil {
+						log.Println(err)
+						return
 					}
+					w.Write(responseMsg)
 				}
+
+				//if client != nil {
+				//	select {
+				//	case client.send <- responseMsg:
+				//	default:
+				//		close(client.send)
+				//		delete(h.clients, client.ID)
+				//	}
+				//}
 			}
 		}
 	}
