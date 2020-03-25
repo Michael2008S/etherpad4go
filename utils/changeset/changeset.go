@@ -227,7 +227,7 @@ func (soa *smartOpAssembler) append(op Operator) {
 	soa.lastOpcode = op.OpCode
 }
 
-func (soa *smartOpAssembler) appendOpWithText(opCode, text, attribs string, pool AttributePool) {
+func (soa *smartOpAssembler) appendOpWithText(opCode, text, attribs string, pool *AttributePool) {
 	op := Operator{}
 	op.OpCode = opCode
 	op.attribs = makeAttribsString(opCode, attribs, pool)
@@ -780,9 +780,9 @@ func (chgset *ChangeSet) MakeSplice(oldFullText string, spliceStart, numRemoved 
 	chgset.NewLen = chgset.OldLen + len(newText) - chgset.OldLen
 
 	assem := smartOpAssembler{}
-	assem.appendOpWithText("=", SubString(oldFullText, 0, spliceStart), "", "")
-	assem.appendOpWithText("-", oldText, "", "")
-	assem.appendOpWithText("+", newText, optNewTextAPairs, "")
+	assem.appendOpWithText("=", SubString(oldFullText, 0, spliceStart), "", nil)
+	assem.appendOpWithText("-", oldText, "", nil)
+	assem.appendOpWithText("+", newText, optNewTextAPairs, nil)
 	assem.endDocument()
 	chgset.Ops = assem.toString()
 	chgset.CharBank = newText
@@ -835,7 +835,7 @@ func moveOpsToNewPool(cs string, oldPool, newPool AttributePool) string {
  */
 func makeAttribution(text string) string {
 	assem := smartOpAssembler{}
-	assem.appendOpWithText("+", text, "", "")
+	assem.appendOpWithText("+", text, "", nil)
 	return assem.toString()
 }
 
@@ -1001,11 +1001,11 @@ func (b *Builder) Keep(N, L int, attribs string, pool AttributePool) {
 }
 
 func (b *Builder) KeepText(text, attribs string, pool AttributePool) {
-	b.assem.appendOpWithText("=", text, attribs, pool)
+	b.assem.appendOpWithText("=", text, attribs, &pool)
 }
 
 func (b *Builder) Insert(text, attribs string, pool AttributePool) {
-	b.assem.appendOpWithText("+", text, attribs, pool)
+	b.assem.appendOpWithText("+", text, attribs, &pool)
 	b.charBank.append(text)
 }
 
@@ -1028,7 +1028,7 @@ func (b *Builder) ToString() string {
 	return chgset.Pack()
 }
 
-func makeAttribsString(opCode, attribs string, pool AttributePool) string {
+func makeAttribsString(opCode, attribs string, pool *AttributePool) string {
 	// makeAttribsString(opcode, '*3') or makeAttribsString(opcode, [['foo','bar']], myPool) work
 	if len(opCode) <= 0 {
 		return ""

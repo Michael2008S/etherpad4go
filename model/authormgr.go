@@ -23,7 +23,7 @@ var ColorPalette = []string{"#ffc7c7", "#fff1c7", "#e3ffc7", "#c7ffd5", "#c7ffff
 	"#eaaedd", "#adc6eb", "#bedad1", "#dee9af", "#e9afc2", "#f8d2a0", "#b3b3e6",}
 
 type AuthorMgr struct {
-	dbStore store.Store
+	DbStore store.Store
 }
 
 type Author struct {
@@ -33,7 +33,7 @@ type Author struct {
 }
 
 func (a *AuthorMgr) DoesAuthorExist(authorID string) bool {
-	_, b := a.dbStore.Get([]byte(AuthorKey + authorID))
+	_, b := a.DbStore.Get([]byte(AuthorKey + authorID))
 	return b
 }
 
@@ -59,16 +59,16 @@ func (a *AuthorMgr) CreateAuthor(name string) string {
 	authObj.Name = name
 	authObj.Timestamp = time.Now().Unix()
 	authObjStr, _ := json.Marshal(authObj)
-	a.dbStore.Set([]byte(AuthorKey+author), authObjStr, 0)
+	a.DbStore.Set([]byte(AuthorKey+author), authObjStr, 0)
 	return author
 }
 
 func (a *AuthorMgr) mapAuthorWithDBKey(mapperKey, mapper string) string {
-	val, b := a.dbStore.Get([]byte(mapperKey + mapper))
+	val, b := a.DbStore.Get([]byte(mapperKey + ":" + mapper))
 	authorID := string(val)
 	if !b {
 		authorID = a.CreateAuthor("")
-		a.dbStore.Set([]byte(mapperKey+":"+mapper), []byte(authorID), 0)
+		a.DbStore.Set([]byte(mapperKey+":"+mapper), []byte(authorID), 0)
 	}
 	//TODO  update the Timestamp of this Author
 	return authorID

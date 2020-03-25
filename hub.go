@@ -99,11 +99,20 @@ func (h *Hub) handleMessage(message InboundMsg) error {
 		clientReadyReq := api.ClientReadyReq{}
 		json.Unmarshal(message.message, &clientReadyReq)
 		createSessionInfo(message.from, clientReadyReq)
-		q.Q("createSessionInfo")
+		q.Q("createSessionInfo", sessionInfo)
+
+		authorMgr := model.AuthorMgr{h.dbStore}
+		author := authorMgr.GetAuthor4Token(clientReadyReq.Token)
+		authInfo, ok := sessionInfo[message.from.ID]
+		if ok {
+			authInfo.author = author
+			sessionInfo[message.from.ID] = authInfo
+		}
+		q.Q(sessionInfo)
 	} else if msgType.(string) == "CHANGESET_REQ" {
 		//	handleChangesetRequest(client, message);
 	} else if msgType.(string) == "COLLABROOM" {
-		msgDataType := gojsonq.New().FromString(string(message.message)).Find("type")
+		msgDataType := gojsonq.New().FromString(string(message.message)).Find("data.type")
 		if msgDataType == "USER_CHANGES" {
 			// TODO padChannels.emit(message.padId, {client: client, message: message}); // add to pad queue
 			h.handleUserChanges(message)
@@ -126,9 +135,10 @@ func (h *Hub) handleUserChanges(msg InboundMsg) error {
 	reqMsg := api.CollabRoomReqMessage{}
 	json.Unmarshal(msg.message, &reqMsg)
 
+	q.Q("handleUserChanges:", reqMsg)
 	// get all Vars we need
 	baseRev := reqMsg.Data.BaseRev
-	wireApool := reqMsg.Data.Apool
+	//wireApool := reqMsg.Data.Apool
 	cs := reqMsg.Data.Changeset
 
 	// The client might disconnect between our callbacks. We should still
@@ -148,7 +158,7 @@ func (h *Hub) handleUserChanges(msg InboundMsg) error {
 	// Validate all added 'author' attribs to be the same value as the current user
 
 	// ex. applyUserChanges
-	apool := pad.Pool
+	//apool := pad.Pool
 	r := baseRev
 
 	// The client's changeset might not be based on the latest revision,
@@ -167,7 +177,7 @@ func (h *Hub) handleUserChanges(msg InboundMsg) error {
 
 	}
 
-	prevText := pad.GetText()
+	//prevText := pad.GetText()
 
 	pad.AppendRevision(cs, thisSession.author)
 
@@ -192,6 +202,7 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 	if len(roomClients) == 0 {
 		return
 	}
+	q.Q("updatePadClients:", roomClients)
 
 	// since all clients usually get the same set of changesets, store them in local cache
 	// to remove unnecessary roundtrip to the datalayer
@@ -221,7 +232,7 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 			if _, ok := sessionInfo[sid]; !ok {
 				continue
 			}
-
+			q.Q(val, sid, revision)
 			if author == sessionInfo[sid].author {
 				// 发给自己的确认信息
 				resp := api.CollabRoomAcceptCommitResp{
@@ -275,7 +286,6 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 			}
 		}
 	}
-
 }
 
 func _getRoomClients(padID string) []string {

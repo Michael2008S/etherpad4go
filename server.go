@@ -180,7 +180,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, dbStore bgStore.S
 		log.Println("收到websocket链接")
 
 		// 发送 CLIENT_VARS 数据
-		sendClientVars(conn, client.dbStore)
+		sendClientVars(client, client.dbStore)
 
 	} else {
 		log.Println("您这也不是websocket啊")
@@ -195,7 +195,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, dbStore bgStore.S
 }
 
 // 发送客户端数据：
-func sendClientVars(conn *websocket.Conn, db bgStore.Store) {
+func sendClientVars(client *Client, db bgStore.Store) {
 
 	// TODO pid
 	// load the pad-object from the database
@@ -237,7 +237,7 @@ func sendClientVars(conn *websocket.Conn, db bgStore.Store) {
 		Type: api.MsgTypeClientVars,
 		Data: clientVarsData,
 	}
-	w, err := conn.NextWriter(websocket.TextMessage)
+	w, err := client.conn.NextWriter(websocket.TextMessage)
 	if err != nil {
 		log.Println(err)
 		return
@@ -248,4 +248,13 @@ func sendClientVars(conn *websocket.Conn, db bgStore.Store) {
 	if err := w.Close(); err != nil {
 		return
 	}
+
+	authInfo, ok := sessionInfo[client.ID]
+	if ok {
+		authInfo.rev = pad.GetHeadRevisionNumber()
+		sessionInfo[client.ID] = authInfo
+	}
+
+	// TODO  // prepare the notification for the other users on the pad, that this user joined
+
 }
