@@ -180,7 +180,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, dbStore bgStore.S
 		log.Println("收到websocket链接")
 
 		// 发送 CLIENT_VARS 数据
-		sendClientVars(client, client.dbStore)
+		sendClientVars(hub, client, client.dbStore)
 
 	} else {
 		log.Println("您这也不是websocket啊")
@@ -195,7 +195,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, dbStore bgStore.S
 }
 
 // 发送客户端数据：
-func sendClientVars(client *Client, db bgStore.Store) {
+func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 
 	// TODO pid
 	// load the pad-object from the database
@@ -252,9 +252,38 @@ func sendClientVars(client *Client, db bgStore.Store) {
 	authInfo, ok := sessionInfo[client.ID]
 	if ok {
 		authInfo.rev = pad.GetHeadRevisionNumber()
-		//sessionInfo[client.ID]= authInfo
 	}
 
 	// TODO  // prepare the notification for the other users on the pad, that this user joined
-
+	userInfo := api.UserInfo{
+		Ip:        "127.0.0.1",
+		ColorId:   0,
+		UserAgent: "Anonymous",
+		UserId:    authInfo.author,
+	}
+	messageToTheOtherUsers := api.UserNewInfoResp{
+		Type: "COLLABROOM",
+		Data: struct {
+			Type     string       `json:"type"`
+			UserInfo api.UserInfo `json:"userInfo"`
+		}{Type: "USER_NEWINFO",
+			UserInfo: userInfo},
+	}
+	messageToTheOtherUsersResp, _ := json.Marshal(&messageToTheOtherUsers)
+	// notify all existing users about new user
+	// TODO client.broadcast.to(padIds.padId).json.send(messageToTheOtherUsers);
+	// Get sessions for this pad and update them (in parallel)
+	roomClients := _getRoomClients(pad.Id)
+	for _, clientID := range roomClients {
+		roomCli := hub.clients[clientID]
+		if clientID == client.ID || roomCli == nil {
+			continue
+		}
+		w, err := client.conn.NextWriter(websocket.TextMessage)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		w.Write(messageToTheOtherUsersResp)
+	}
 }

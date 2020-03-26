@@ -43,3 +43,18 @@ type CollabRoomNewChangesResp struct {
 		TimeDelta   int                     `json:"timeDelta"`
 	} `json:"data"`
 }
+
+type UserNewInfoResp struct {
+	Type string `json:"type"`
+	Data struct {
+		Type string `json:"type"`
+		UserInfo UserInfo `json:"userInfo"`
+	} `json:"data"`
+}
+
+type UserInfo struct {
+	Ip string `json:"ip"`
+	ColorId int `json:"colorId"`
+	UserAgent string `json:"userAgent"`
+	UserId   string `json:"userId"`
+}
