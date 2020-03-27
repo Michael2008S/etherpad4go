@@ -249,17 +249,19 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 		return
 	}
 
-	authInfo, ok := sessionInfo[client.ID]
-	if ok {
-		authInfo.rev = pad.GetHeadRevisionNumber()
-	}
+
 
 	// TODO  // prepare the notification for the other users on the pad, that this user joined
 	userInfo := api.UserInfo{
 		Ip:        "127.0.0.1",
 		ColorId:   0,
 		UserAgent: "Anonymous",
-		UserId:    authInfo.author,
+		//UserId:    authInfo.author,
+	}
+	authInfo, ok := sessionInfo[client.ID]
+	if ok {
+		authInfo.rev = pad.GetHeadRevisionNumber()
+		userInfo.UserId = authInfo.author
 	}
 	messageToTheOtherUsers := api.UserNewInfoResp{
 		Type: "COLLABROOM",

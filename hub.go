@@ -235,7 +235,7 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 			if _, ok := sessionInfo[sid]; !ok {
 				continue
 			}
-			q.Q(val, sid, revision)
+			q.Q(val, sid)
 			if author == sessionInfo[sid].author {
 				// 发给自己的确认信息
 				resp := api.CollabRoomAcceptCommitResp{
