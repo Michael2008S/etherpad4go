@@ -249,7 +249,8 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 		return
 	}
 
-
+	//sessionInfo[client.ID].rev =pad.GetHeadRevisionNumber()
+	//sessionInfo[client.ID].author =
 
 	// TODO  // prepare the notification for the other users on the pad, that this user joined
 	userInfo := api.UserInfo{
@@ -287,5 +288,9 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 			continue
 		}
 		w.Write(messageToTheOtherUsersResp)
+		if err := w.Close(); err != nil {
+			return
+		}
 	}
+
 }

@@ -101,13 +101,14 @@ func (h *Hub) handleMessage(message InboundMsg) error {
 		json.Unmarshal(message.message, &clientReadyReq)
 		createSessionInfo(message.from, clientReadyReq)
 		q.Q("createSessionInfo", sessionInfo)
+		pad := model.NewPad(clientReadyReq.PadID, "", message.from.dbStore)
 
 		authorMgr := model.AuthorMgr{h.dbStore}
 		author := authorMgr.GetAuthor4Token(clientReadyReq.Token)
 		authInfo, ok := sessionInfo[message.from.ID]
 		if ok {
 			authInfo.author = author
-			//sessionInfo[message.from.ID] = authInfo
+			authInfo.rev = pad.GetHeadRevisionNumber()
 		}
 		q.Q(sessionInfo)
 	} else if msgType.(string) == "CHANGESET_REQ" {
@@ -119,8 +120,6 @@ func (h *Hub) handleMessage(message InboundMsg) error {
 			h.handleUserChanges(message)
 		}
 	}
-
-	//return []byte(`{"type":"error"}`)
 	return nil
 }
 
@@ -247,6 +246,7 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 						NewRev: r},
 				}
 				responseMsg, _ := json.Marshal(&resp)
+
 				client, ok := h.clients[sid]
 				if ok {
 					w, err := client.conn.NextWriter(websocket.TextMessage)
@@ -255,6 +255,9 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 						return
 					}
 					w.Write(responseMsg)
+					if err := w.Close(); err != nil {
+						return
+					}
 				}
 			} else {
 				translated, pool := changeset.PrepareForWire(revChangeset, pad.Pool)
@@ -285,6 +288,9 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 						return
 					}
 					w.Write(responseMsg)
+					if err := w.Close(); err != nil {
+						return
+					}
 				}
 			}
 		}
