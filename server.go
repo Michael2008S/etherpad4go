@@ -7,7 +7,6 @@ import (
 	"github.com/Michael2008S/etherpad4go/model"
 	bgStore "github.com/Michael2008S/etherpad4go/store"
 	"github.com/Michael2008S/etherpad4go/utils/changeset"
-	"github.com/y0ssar1an/q"
 	"log"
 	"net/http"
 	"time"
@@ -103,8 +102,9 @@ func (c *Client) readPump() {
 		//q.Q("readPump_message:", string(message))
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+				log.Printf("主动断开链接1：error: %v", err)
 			}
+			log.Printf("主动断开链接2：error: %v", err)
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
@@ -167,14 +167,17 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, dbStore bgStore.S
 		log.Println(err)
 		return
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
-	client.hub.register <- client
-	client.dbStore = dbStore
 
 	// 使用Sec-WebSocket-Key当链接key
 	id := r.Header.Get("Sec-WebSocket-Key")
+
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
 	log.Printf("header: Sec-WebSocket-Key is \" %v \" \n", id)
 	client.ID = id
+	client.dbStore = dbStore
+	client.hub.register <- client
+
+
 
 	if websocket.IsWebSocketUpgrade(r) {
 		log.Println("收到websocket链接")
@@ -242,7 +245,7 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 		log.Println(err)
 		return
 	}
-	q.Q(clientVarsResp)
+	//q.Q(clientVarsResp)
 	resp, _ := json.Marshal(clientVarsResp)
 	w.Write(resp)
 	if err := w.Close(); err != nil {

@@ -56,13 +56,14 @@ func (h *Hub) Run() {
 		case client := <-h.register:
 			h.clients[client.ID] = client
 			//q.Q("Hub Run client<-register", client)
-			log.Println("Hub Run client<-register:%+v", client)
+			log.Println("Hub Run client<-register:%+v", client.ID)
 		case client := <-h.unregister:
 			if _, ok := h.clients[client.ID]; ok {
+				delete(sessionInfo, client.ID)
 				delete(h.clients, client.ID)
 				close(client.send)
+				log.Println("Hub Run client<-unregister", client.ID)
 			}
-			log.Println("Hub Run client<-unregister", client)
 		case message := <-h.broadcast:
 
 			// 消息判断分发处理
@@ -213,6 +214,10 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 	// but benefit of reusing cached revision object is HUGE
 
 	revCache := make(map[int]model.RevData)
+	log.Println("Clients ", len(h.clients))
+	for k, _ := range h.clients {
+		q.Q("clients===:", k)
+	}
 
 	for _, sid := range roomClients {
 		q.Q("roomClients--> ", sid)
@@ -234,7 +239,7 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 			if _, ok := sessionInfo[sid]; !ok {
 				continue
 			}
-			q.Q(val, sid)
+
 			if author == sessionInfo[sid].author {
 				// 发给自己的确认信息
 				resp := api.CollabRoomAcceptCommitResp{
@@ -246,8 +251,8 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 						NewRev: r},
 				}
 				responseMsg, _ := json.Marshal(&resp)
-
 				client, ok := h.clients[sid]
+				q.Q("updatePadClients to me:", val, sid, ok)
 				if ok {
 					w, err := client.conn.NextWriter(websocket.TextMessage)
 					if err != nil {
@@ -281,6 +286,7 @@ func (h *Hub) updatePadClients(pad *model.Pad) {
 				}
 				responseMsg, _ := json.Marshal(&wireMsg)
 				client, ok := h.clients[sid]
+				q.Q("updatePadClients to other--:", val, sid, ok)
 				if ok {
 					w, err := client.conn.NextWriter(websocket.TextMessage)
 					if err != nil {

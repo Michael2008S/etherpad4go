@@ -700,7 +700,7 @@ var pad = {
     {
       var chatHead = clientVars.chatHead;
       var start = Math.max(chatHead - 100, 0);
-      pad.collabClient.sendMessage({"type": "GET_CHAT_MESSAGES", "start": start, "end": chatHead});
+      // 不发送 chat 消息，简化处理。 pad.collabClient.sendMessage({"type": "GET_CHAT_MESSAGES", "start": start, "end": chatHead});
     }
     else // there are no messages
     {
