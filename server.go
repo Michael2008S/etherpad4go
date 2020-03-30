@@ -177,13 +177,11 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, dbStore bgStore.S
 	client.dbStore = dbStore
 	client.hub.register <- client
 
-
-
 	if websocket.IsWebSocketUpgrade(r) {
 		log.Println("收到websocket链接")
 
 		// 发送 CLIENT_VARS 数据
-		sendClientVars(hub, client, client.dbStore)
+		//sendClientVars(hub, client, client.dbStore)
 
 	} else {
 		log.Println("您这也不是websocket啊")
@@ -233,7 +231,7 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 		Rev:   pad.GetHeadRevisionNumber(),
 		Time:  time.Now().Unix(),
 	}
-	clientVarsData.UserID = "123"
+	clientVarsData.UserID = sessionInfo[client.ID].author
 	clientVarsData.CollabClientVars = collabClientVars
 	clientVarsData.ColorPalette = model.ColorPalette
 	clientVarsResp := api.WarpMsgResp{

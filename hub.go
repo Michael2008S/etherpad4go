@@ -111,7 +111,7 @@ func (h *Hub) handleMessage(message InboundMsg) error {
 			authInfo.author = author
 			authInfo.rev = pad.GetHeadRevisionNumber()
 		}
-		q.Q(sessionInfo)
+		sendClientVars(h, message.from, message.from.dbStore)
 	} else if msgType.(string) == "CHANGESET_REQ" {
 		//	handleChangesetRequest(client, message);
 	} else if msgType.(string) == "COLLABROOM" {

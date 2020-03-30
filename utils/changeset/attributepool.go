@@ -8,7 +8,7 @@ package changeset
 
 type AttributePool struct {
 	NumToAttrib map[int][]string `json:"numToAttrib"` // e.g. {0: ['foo','bar']}
-	AttribToNum map[string]int   `json:"-"`           // e.g. {'foo,bar': 0}
+	AttribToNum map[string]int   `json:"attribToNum"` // e.g. {'foo,bar': 0}
 	NextNum     int              `json:"nextNum"`
 }
 

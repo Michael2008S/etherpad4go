@@ -70,7 +70,7 @@ func (p *Pad) Init(text string) {
 	if found {
 		// copy all attr. To a transfrom via fromJsonable if necassary
 		// TODO
-		log.Println("pad_init:", string(value))
+		log.Println("pad_init_found:", string(value))
 		err := json.Unmarshal(value, p)
 		if err != nil {
 			log.Println(err)
