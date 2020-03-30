@@ -1,5 +1,7 @@
 package changeset
 
+import "strings"
+
 /*
   An AttributePool maintains a mapping from [key,value] Pairs called
   Attributes to Numbers (unsigened integers) and vice versa. These numbers are
@@ -20,8 +22,9 @@ func NewAttributePool() AttributePool {
 	}
 }
 
-func (a *AttributePool) PutAttrib(attrib string, dontAddIfAbsent bool) int {
-	num, found := a.AttribToNum[attrib]
+func (a *AttributePool) PutAttrib(attrib []string, dontAddIfAbsent bool) int {
+	attribToStr := strings.Join(attrib, ",")
+	num, found := a.AttribToNum[attribToStr]
 	if found {
 		return num
 	}
@@ -29,9 +32,9 @@ func (a *AttributePool) PutAttrib(attrib string, dontAddIfAbsent bool) int {
 		return -1
 	}
 	num = a.NextNum + 1
-	a.AttribToNum[attrib] = num
+	a.AttribToNum[attribToStr] = num
 	// FIXME  this.numToAttrib[num] = [String(attrib[0] || ''), String(attrib[1] || '')];
-	a.NumToAttrib[num] = append(a.NumToAttrib[num], attrib)
+	a.NumToAttrib[num] = attrib
 	return num
 }
 

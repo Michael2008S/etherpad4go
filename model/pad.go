@@ -95,8 +95,8 @@ func CleanText(text string) string {
 	return text
 }
 
-func (p *Pad) apool() changeset.AttributePool {
-	return p.Pool
+func (p *Pad) apool() *changeset.AttributePool {
+	return &p.Pool
 }
 
 func (p *Pad) GetHeadRevisionNumber() int {
@@ -124,7 +124,7 @@ func (p *Pad) AppendRevision(aChangeset, author string) error {
 	}
 	// ex. getNumForAuthor
 	if len(author) > 0 {
-		p.Pool.PutAttrib("Author", true)
+		p.Pool.PutAttrib([]string{"Author", author}, false)
 	}
 	p.Head++
 	newRev := p.Head
@@ -133,6 +133,9 @@ func (p *Pad) AppendRevision(aChangeset, author string) error {
 	}
 	jsonStr, _ := json.Marshal(newRevData)
 	p.dbStore.Set([]byte(PadKey+p.Id+PadRevisionKey+strconv.Itoa(newRev)), jsonStr, 0)
+	if len(author) > 0 {
+		p.apool().PutAttrib([]string{"author", author}, false)
+	}
 	p.saveToDatabase()
 
 	// TODO

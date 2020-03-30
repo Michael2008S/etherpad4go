@@ -825,7 +825,7 @@ func moveOpsToNewPool(cs string, oldPool, newPool AttributePool) string {
 	oldNum, _ := strconv.ParseInt(a, 36, 32)
 	pair := oldPool.GetAttrib(int(oldNum))
 	// TODO if(!pair) exports.error('Can\'t copy unknown attrib (reference attrib string to non-existant pool entry). Inconsistent attrib state!');
-	newNum := newPool.PutAttrib(strings.Join(pair, ","), false)
+	newNum := newPool.PutAttrib(pair, false)
 	return rgx.ReplaceAllString(upToDollar, strconv.Itoa(newNum)) + fromDollar
 }
 
