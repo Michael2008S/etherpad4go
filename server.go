@@ -253,12 +253,12 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 	//sessionInfo[client.ID].rev =pad.GetHeadRevisionNumber()
 	//sessionInfo[client.ID].author =
 
-	// TODO  // prepare the notification for the other users on the pad, that this user joined
+	// prepare the notification for the other users on the pad, that this user joined
 	userInfo := api.UserInfo{
 		Ip:        "127.0.0.1",
 		ColorId:   0,
 		UserAgent: "Anonymous",
-		//UserId:    authInfo.author,
+		UserId:    sessionInfo[client.ID].author,
 	}
 	authInfo, ok := sessionInfo[client.ID]
 	if ok {
@@ -274,6 +274,20 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 			UserInfo: userInfo},
 	}
 	messageToTheOtherUsersResp, _ := json.Marshal(&messageToTheOtherUsers)
+
+	// 发给我的消息
+	messageToMe := api.UserNewInfoResp{
+		Type: "COLLABROOM",
+		Data: struct {
+			Type     string       `json:"type"`
+			UserInfo api.UserInfo `json:"userInfo"`
+		}{Type: "USER_NEWINFO",
+		},
+	}
+	myWrite, err := client.conn.NextWriter(websocket.TextMessage)
+	if err != nil {
+		log.Println(err)
+	}
 	// notify all existing users about new user
 	// TODO client.broadcast.to(padIds.padId).json.send(messageToTheOtherUsers);
 	// Get sessions for this pad and update them (in parallel)
@@ -283,15 +297,30 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 		if clientID == client.ID || roomCli == nil {
 			continue
 		}
-		w, err := client.conn.NextWriter(websocket.TextMessage)
+		// 发送我到pad 房间其他人
+		w, err := roomCli.conn.NextWriter(websocket.TextMessage)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 		w.Write(messageToTheOtherUsersResp)
 		if err := w.Close(); err != nil {
-			return
+			log.Println(err)
+			//return
 		}
-	}
 
+		// 发送其他已有的用户到我的 client 中
+		toMyUserInfo := api.UserInfo{
+			Ip:        "127.0.0.1",
+			ColorId:   0,
+			UserAgent: "Anonymous",
+			UserId:    sessionInfo[clientID].author,
+		}
+		messageToMe.Data.UserInfo = toMyUserInfo
+		messageToMeResp, _ := json.Marshal(&messageToMe)
+		myWrite.Write(messageToMeResp)
+	}
+	if err := myWrite.Close(); err != nil {
+		log.Println(err)
+	}
 }
