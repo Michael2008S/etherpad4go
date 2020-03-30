@@ -2,6 +2,10 @@ package changeset
 
 import "strings"
 
+const (
+	AttribKeyAuthor = "author"
+)
+
 /*
   An AttributePool maintains a mapping from [key,value] Pairs called
   Attributes to Numbers (unsigened integers) and vice versa. These numbers are
@@ -31,7 +35,8 @@ func (a *AttributePool) PutAttrib(attrib []string, dontAddIfAbsent bool) int {
 	if dontAddIfAbsent {
 		return -1
 	}
-	num = a.NextNum + 1
+	num = a.NextNum
+	a.NextNum++
 	a.AttribToNum[attribToStr] = num
 	// FIXME  this.numToAttrib[num] = [String(attrib[0] || ''), String(attrib[1] || '')];
 	a.NumToAttrib[num] = attrib

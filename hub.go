@@ -179,7 +179,7 @@ func (h *Hub) handleUserChanges(msg InboundMsg) error {
 	}
 
 	//prevText := pad.GetText()
-
+	q.Q("handleUserChanges:", pad.Id, pad.Head)
 	pad.AppendRevision(cs, thisSession.author)
 
 	//correctionChangeset := _correctMarkersInPad(pad.AText, pad.Pool)

@@ -5,6 +5,7 @@ import (
 	"github.com/Michael2008S/etherpad4go/store"
 	"github.com/Michael2008S/etherpad4go/utils/changeset"
 	"github.com/jinzhu/copier"
+	"github.com/y0ssar1an/q"
 	"log"
 	"math"
 	"strconv"
@@ -113,7 +114,9 @@ func (p *Pad) getSavedRevisionsList() int {
 
 func (p *Pad) AppendRevision(aChangeset, author string) error {
 	cs := changeset.ChangeSet{}
+	q.Q(p.AText, p.Pool)
 	newAText := cs.ApplyToAText(aChangeset, p.AText, p.Pool)
+	q.Q("newAText**:", newAText)
 	copier.Copy(p.AText, newAText)
 	newRevData := RevData{
 		Changeset: aChangeset,
@@ -124,7 +127,7 @@ func (p *Pad) AppendRevision(aChangeset, author string) error {
 	}
 	// ex. getNumForAuthor
 	if len(author) > 0 {
-		p.Pool.PutAttrib([]string{"Author", author}, false)
+		p.Pool.PutAttrib([]string{changeset.AttribKeyAuthor, author}, false)
 	}
 	p.Head++
 	newRev := p.Head
@@ -134,7 +137,7 @@ func (p *Pad) AppendRevision(aChangeset, author string) error {
 	jsonStr, _ := json.Marshal(newRevData)
 	p.dbStore.Set([]byte(PadKey+p.Id+PadRevisionKey+strconv.Itoa(newRev)), jsonStr, 0)
 	if len(author) > 0 {
-		p.apool().PutAttrib([]string{"author", author}, false)
+		p.apool().PutAttrib([]string{changeset.AttribKeyAuthor, author}, false)
 	}
 	p.saveToDatabase()
 
