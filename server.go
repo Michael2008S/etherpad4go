@@ -203,8 +203,8 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 	pad := model.NewPad("q", "", db)
 
 	atext := pad.AText
-	atext.Attribs = "|4+2l"
-	atext.Text = "Welcome to Etherpad!\n\nThis pad text is synchronized~ https://github.com/ether/etherpad-lite\n\n"
+	//atext.Attribs = "|4+2l"
+	//atext.Text = "Welcome to Etherpad!\n\nThis pad text is synchronized~ https://github.com/ether/etherpad-lite\n\n"
 	translated, newPool := changeset.PrepareForWire(atext.Attribs, pad.Pool)
 	//apool := newPool.ToJsonAble
 	atext.Attribs = translated
@@ -213,10 +213,11 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 
 	clientVarsData := api.ClientVarsDataResp{}
 	clientVarsData.SkinName = "no-skin"
+	clientVarsData.PadID = pad.Id
 	collabClientVars := api.CollabClientVars{
 		InitialAttributedText: atext,
 		ClientIP:              "127.0.0.1",
-		PadID:                 "q",
+		PadID:                 pad.Id,
 		HistoricalAuthorData: struct {
 			APy0WdSkbof4TM4DD struct {
 				Name    interface{} `json:"name"`

@@ -767,7 +767,7 @@ func Identity() {
  * @param pool {AttribPool} Attribution Pool
  */
 func (chgset *ChangeSet) MakeSplice(oldFullText string, spliceStart, numRemoved int,
-	newText string, optNewTextAPairs string, pool string) string {
+	newText string, optNewTextAPairs string, pool *AttributePool) string {
 	chgset.OldLen = len(oldFullText)
 	if spliceStart >= chgset.OldLen {
 		spliceStart = chgset.OldLen - 1

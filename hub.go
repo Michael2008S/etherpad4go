@@ -189,7 +189,7 @@ func (h *Hub) handleUserChanges(msg InboundMsg) error {
 
 	// Make sure the pad always ends with an empty line.
 	if strings.LastIndex(pad.GetText(), "\n") != len(pad.GetText())-1 {
-		nlChangeset := chgset.MakeSplice(pad.GetText(), len(pad.GetText())-1, 0, "\n", "", "")
+		nlChangeset := chgset.MakeSplice(pad.GetText(), len(pad.GetText())-1, 0, "\n", "", nil)
 		pad.AppendRevision(nlChangeset, thisSession.author)
 	}
 	h.updatePadClients(&pad)

@@ -82,7 +82,7 @@ func (p *Pad) Init(text string) {
 		}
 		// this pad doesn't exist, so create it
 		cs := changeset.ChangeSet{}
-		firstChangeset := cs.MakeSplice("\n", 0, 0, CleanText(text), "", "")
+		firstChangeset := cs.MakeSplice("\n", 0, 0, CleanText(text), "", nil)
 		p.AppendRevision(firstChangeset, "")
 	}
 	// TODO  hooks.callAll("padLoad", { 'pad':  this });
@@ -245,9 +245,9 @@ func (p *Pad) SetText(newText string) {
 	// getText() and setText() consistent.
 	var cs string
 	if string([]rune(newText)[newTxtLen-1:newTxtLen]) == "\n" {
-		cs = chgset.MakeSplice(oldText, 0, len(oldText), newText, "", "")
+		cs = chgset.MakeSplice(oldText, 0, len(oldText), newText, "", nil)
 	} else {
-		cs = chgset.MakeSplice(oldText, 0, len(oldText)-1, newText, "", "")
+		cs = chgset.MakeSplice(oldText, 0, len(oldText)-1, newText, "", nil)
 	}
 	// append the Changeset
 	p.AppendRevision(cs, "")
@@ -256,7 +256,7 @@ func (p *Pad) appendText(newText string) {
 	newText = CleanText(newText)
 	oldText := p.GetText()
 	chgset := changeset.ChangeSet{}
-	cs := chgset.MakeSplice(oldText, len(oldText), 0, newText, "", "")
+	cs := chgset.MakeSplice(oldText, len(oldText), 0, newText, "", nil)
 	p.AppendRevision(cs, "")
 }
 

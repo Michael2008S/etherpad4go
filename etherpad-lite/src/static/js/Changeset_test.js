@@ -46,3 +46,6 @@ console.log(result);
 //     return "gold " + capture + "|" + match;
 // });
 // console.log(testReplace);
+
+
+changeset.makeSplice("\n", 0, 0,)

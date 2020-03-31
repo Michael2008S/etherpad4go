@@ -2,6 +2,8 @@ package changeset
 
 import (
 	"fmt"
+	"log"
+	"strings"
 	"testing"
 )
 
@@ -24,9 +26,28 @@ func TestOperatorIterator_NewIterator(t *testing.T) {
 	}
 	opIter := NewOperatorIterator(chgset.Ops, 0)
 	fmt.Println(opIter)
-	for opIter.hasNext() {
+	for opIter.HasNext() {
 		aOp := opIter.Next()
 		fmt.Println(aOp)
-		fmt.Println(opIter.hasNext())
+		fmt.Println(opIter.HasNext())
 	}
+}
+
+func TestChangeSet_MakeSplice(t *testing.T) {
+
+	text := `Welcome to Etherpad!\n\nThis pad text is synchronized~ https:\/\/github.com\/ether\/etherpad-lite\n`
+
+	cleanTxt := CleanText(text)
+	chgset := ChangeSet{}
+	cs := chgset.MakeSplice("\n", 0, 0, cleanTxt, "", nil)
+
+	log.Println(cs)
+}
+
+func CleanText(text string) string {
+	strings.Replace(text, "\r\n", "\n", 0)
+	strings.Replace(text, "\r", "\n", 0)
+	strings.Replace(text, "\t", "        ", 0)
+	strings.Replace(text, "\xa0", " ", 0)
+	return text
 }
