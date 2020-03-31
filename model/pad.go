@@ -5,7 +5,6 @@ import (
 	"github.com/Michael2008S/etherpad4go/store"
 	"github.com/Michael2008S/etherpad4go/utils/changeset"
 	"github.com/jinzhu/copier"
-	"github.com/y0ssar1an/q"
 	"log"
 	"math"
 	"strconv"
@@ -19,7 +18,10 @@ const (
 )
 
 const (
-	defaultPadText = `Welcome to Etherpad!\n\nThis pad text is synchronized~ https:\/\/github.com\/ether\/etherpad-lite\n`
+	defaultPadText = `Welcome to Etherpad!
+
+This pad text is synchronized~ https://github.com/ether/etherpad-lite
+`
 )
 
 type Pad struct {
@@ -114,9 +116,7 @@ func (p *Pad) getSavedRevisionsList() int {
 
 func (p *Pad) AppendRevision(aChangeset, author string) error {
 	cs := changeset.ChangeSet{}
-	q.Q(p.AText, p.Pool, aChangeset)
 	newAText := cs.ApplyToAText(aChangeset, p.AText, p.Pool)
-	q.Q("newAText**:", newAText)
 	copier.Copy(&p.AText, newAText)
 	newRevData := RevData{
 		Changeset: aChangeset,
