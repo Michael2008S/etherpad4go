@@ -114,7 +114,7 @@ func (p *Pad) getSavedRevisionsList() int {
 
 func (p *Pad) AppendRevision(aChangeset, author string) error {
 	cs := changeset.ChangeSet{}
-	q.Q(p.AText, p.Pool)
+	q.Q(p.AText, p.Pool, aChangeset)
 	newAText := cs.ApplyToAText(aChangeset, p.AText, p.Pool)
 	q.Q("newAText**:", newAText)
 	copier.Copy(&p.AText, newAText)

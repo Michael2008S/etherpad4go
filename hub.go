@@ -101,9 +101,7 @@ func (h *Hub) handleMessage(message InboundMsg) error {
 		clientReadyReq := api.ClientReadyReq{}
 		json.Unmarshal(message.message, &clientReadyReq)
 		createSessionInfo(message.from, clientReadyReq)
-		q.Q("createSessionInfo", sessionInfo)
 		pad := model.NewPad(clientReadyReq.PadID, "", message.from.dbStore)
-
 		authorMgr := model.AuthorMgr{h.dbStore}
 		author := authorMgr.GetAuthor4Token(clientReadyReq.Token)
 		authInfo, ok := sessionInfo[message.from.ID]

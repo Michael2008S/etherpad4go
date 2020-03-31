@@ -363,7 +363,6 @@ exports.smartOpAssembler = function () {
       op.lines = 0;
       append(op);
     }
-    console.log(op);
   }
 
   function toString() {
@@ -414,7 +413,6 @@ exports.mergingOpAssembler = function () {
   var bufOpAdditionalCharsAfterNewline = 0;
 
   function flush(isEndDocument) {
-      console.log("mergingOpAssembler.flush:",bufOp);
     if (bufOp.opcode) {
       if (isEndDocument && bufOp.opcode == '=' && !bufOp.attribs) {
         // final merged keep, leave it implicit
@@ -433,7 +431,6 @@ exports.mergingOpAssembler = function () {
 
   function append(op) {
     if (op.chars > 0) {
-        console.log("moa.append:",op);
       if (bufOp.opcode == op.opcode && bufOp.attribs == op.attribs) {
         if (op.lines > 0) {
           // bufOp and additional chars are all mergeable into a multi-line op
@@ -1421,7 +1418,6 @@ exports.makeSplice = function (oldFullText, spliceStart, numRemoved, newText, op
   assem.appendOpWithText('=', oldFullText.substring(0, spliceStart));
   assem.appendOpWithText('-', oldText);
   assem.appendOpWithText('+', newText, optNewTextAPairs, pool);
-  console.log(assem);
   assem.endDocument();
   return exports.pack(oldLen, newLen, assem.toString(), newText);
 };

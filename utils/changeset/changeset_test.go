@@ -2,7 +2,7 @@ package changeset
 
 import (
 	"fmt"
-	"log"
+	"github.com/y0ssar1an/q"
 	"strings"
 	"testing"
 )
@@ -41,7 +41,17 @@ func TestChangeSet_MakeSplice(t *testing.T) {
 	chgset := ChangeSet{}
 	cs := chgset.MakeSplice("\n", 0, 0, cleanTxt, "", nil)
 
-	log.Println(cs)
+	q.Q(cs)
+
+	atext := AText{
+		Text:    "\n",
+		Attribs: "|1+1",
+	}
+	pool := AttributePool{}
+	newText := chgset.ApplyToAText(cs, atext, pool)
+
+	q.Q(newText)
+
 }
 
 func CleanText(text string) string {

@@ -12,7 +12,11 @@ console.log(Math.floor(51 / 100) * 100);
 
 var Changeset = require("ep_etherpad-lite/static/js/Changeset");
 
-text = "Welcome to Etherpad!\\n\\nThis pad text is synchronized~ https:\\/\\/github.com\\/ether\\/etherpad-lite\\n"
+text = `Welcome to Etherpad!\n\nThis pad text is synchronized~ https:\/\/github.com\/ether\/etherpad-lite\n`;
+// text = "Welcome to Etherpad!\\n\\nThis pad text is synchronized~ https:\\/\\/github.com\\/ether\\/etherpad-lite\\n";
 let cleanTxt = Pad.cleanText(text);
 let firstChangeset = Changeset.makeSplice("\n", 0, 0, cleanTxt);
 console.log(firstChangeset);
+console.log(apad.atext,apad.pool);
+newAText = Changeset.applyToAText(firstChangeset,apad.atext,apad.pool);
+console.log(newAText);
