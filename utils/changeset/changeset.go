@@ -490,7 +490,7 @@ func textLinesMutator() {
  * @return {string} the integrated changeset
  */
 
-func applyZip(in1, in2 string, idx1, idx2 int, aFunc func(Operator, Operator, Operator)) string {
+func applyZip(in1, in2 string, idx1, idx2 int, aFunc func(*Operator, *Operator, *Operator)) string {
 	iter1 := NewOperatorIterator(in1, idx1)
 	iter2 := NewOperatorIterator(in2, idx2)
 	assem := smartOpAssembler{}
@@ -499,12 +499,12 @@ func applyZip(in1, in2 string, idx1, idx2 int, aFunc func(Operator, Operator, Op
 	opOut := Operator{}
 	for len(op1.OpCode) > 0 || iter1.HasNext() || len(op2.OpCode) > 0 || iter2.HasNext() {
 		if len(op1.OpCode) <= 0 && iter1.HasNext() {
-			iter1.Next()
+			op1 = iter1.Next()
 		}
 		if len(op2.OpCode) <= 0 && iter2.HasNext() {
-			iter2.Next()
+			op2 = iter2.Next()
 		}
-		aFunc(op1, op2, opOut)
+		aFunc(&op1, &op2, &opOut)
 		if len(opOut.OpCode) > 0 {
 			//print(opOut.toSource());
 			assem.append(opOut)
@@ -624,7 +624,7 @@ func ComposeAttributes(att1, att2 string, resultIsMutation bool, pool AttributeP
  * Function used as parameter for applyZip to apply a Changeset to an
  * attribute
  */
-func _slicerZipperFunc(attOp, csOp, opOut Operator, pool AttributePool) {
+func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 	// attOp is the op from the sequence that is being operated on, either an
 	// attribution string or the earlier of two exportss being composed.
 	// pool can be null if definitely not needed.
@@ -706,7 +706,7 @@ func _slicerZipperFunc(attOp, csOp, opOut Operator, pool AttributePool) {
  */
 func (chgset *ChangeSet) ApplyToAttribution(cs, str string, pool AttributePool) string {
 	chgset.Unpack(cs)
-	return applyZip(str, chgset.Ops, 0, 0, func(op1 Operator, op2 Operator, opOut Operator) {
+	return applyZip(str, chgset.Ops, 0, 0, func(op1 *Operator, op2 *Operator, opOut *Operator) {
 		_slicerZipperFunc(op1, op2, opOut, pool)
 	})
 }
