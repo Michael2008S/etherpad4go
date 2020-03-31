@@ -34,10 +34,14 @@ func TestOperatorIterator_NewIterator(t *testing.T) {
 }
 
 func TestChangeSet_MakeSplice(t *testing.T) {
+	text := `Welcome to Etherpad!
 
-	text := `Welcome to Etherpad!\n\nThis pad text is synchronized~ https:\/\/github.com\/ether\/etherpad-lite\n`
-
+This pad text is synchronized~ https://github.com/ether/etherpad-lite
+`
+	//text = "Welcome to Etherpad!\\n\\nThis pad text is synchronized~ https:\\/\\/github.com\\/ether\\/etherpad-lite\\n"
+	q.Q(text)
 	cleanTxt := CleanText(text)
+	q.Q("cleanTxt", cleanTxt)
 	chgset := ChangeSet{}
 	cs := chgset.MakeSplice("\n", 0, 0, cleanTxt, "", nil)
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jinzhu/copier"
+	"github.com/y0ssar1an/q"
 	"log"
 	"regexp"
 	"strconv"
@@ -238,7 +239,10 @@ func (soa *smartOpAssembler) appendOpWithText(opCode, text, attribs string, pool
 		soa.append(op)
 	} else {
 		op.Chars = lastNewlinePos + 1
-		op.Lines = len(text) // FIXME text.match(/\n/g).length;
+		rgx := regexp.MustCompile(`\n`)
+		findStrs := rgx.Split(text, -1)
+		q.Q(findStrs)
+		op.Lines = len(findStrs) - 1
 		soa.append(op)
 		op.Chars = len(text) - (lastNewlinePos + 1)
 		op.Lines = 0
