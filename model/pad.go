@@ -117,7 +117,7 @@ func (p *Pad) AppendRevision(aChangeset, author string) error {
 	q.Q(p.AText, p.Pool)
 	newAText := cs.ApplyToAText(aChangeset, p.AText, p.Pool)
 	q.Q("newAText**:", newAText)
-	copier.Copy(p.AText, newAText)
+	copier.Copy(&p.AText, newAText)
 	newRevData := RevData{
 		Changeset: aChangeset,
 		Meta: meta{

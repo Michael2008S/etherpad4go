@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jinzhu/copier"
-	"github.com/y0ssar1an/q"
 	"log"
 	"regexp"
 	"strconv"
@@ -169,17 +168,6 @@ func (chgset *ChangeSet) CheckRep(cs string) (err error) {
  * ==================== Util Functions =======================
  */
 
-func NewSmartOpAssembler() smartOpAssembler {
-	return smartOpAssembler{
-		minusAssem:   NewMergingOpAssembler(),
-		plusAssem:    NewMergingOpAssembler(),
-		keepAssem:    NewMergingOpAssembler(),
-		assem:        stringAssembler{},
-		lastOpcode:   "",
-		lengthChange: 0,
-	}
-}
-
 /**
  * creates an object that allows you to append operations (type Op) and also
  * compresses them if possible
@@ -256,7 +244,6 @@ func (soa *smartOpAssembler) appendOpWithText(opCode, text, attribs string, pool
 		op.Lines = 0
 		soa.append(op)
 	}
-	q.Q(op)
 }
 
 func (soa *smartOpAssembler) toString() string {
@@ -302,13 +289,6 @@ func (sa *stringAssembler) clear() {
 //	assem := opAssembler()
 //	bufOp := newOp()
 //}
-func NewMergingOpAssembler() mergingOpAssembler {
-	return mergingOpAssembler{
-		assem:                            OperatorAssembler{},
-		bufOp:                            Operator{},
-		bufOpAdditionalCharsAfterNewline: 0,
-	}
-}
 
 type mergingOpAssembler struct {
 	// This assembler can be used in production; it efficiently
@@ -327,8 +307,6 @@ type mergingOpAssembler struct {
 }
 
 func (moa *mergingOpAssembler) flush(isEndDocument bool) {
-	q.Q("mergingOpAssembler.flush:", moa.bufOp)
-
 	if moa.bufOp.OpCode != "" {
 		if isEndDocument && moa.bufOp.OpCode == "=" && moa.bufOp.attribs != "" {
 			// final merged keep, leave it implicit
@@ -347,7 +325,6 @@ func (moa *mergingOpAssembler) flush(isEndDocument bool) {
 
 func (moa *mergingOpAssembler) append(op Operator) {
 	if op.Chars > 0 {
-		q.Q("moa.append:", op)
 		if moa.bufOp.OpCode == op.OpCode && moa.bufOp.attribs == op.attribs {
 			if op.Lines > 0 {
 				// bufOp and additional chars are all mergeable into a multi-line op
@@ -363,7 +340,7 @@ func (moa *mergingOpAssembler) append(op Operator) {
 			}
 		} else {
 			moa.flush(false)
-			copier.Copy(moa.bufOp, op)
+			copier.Copy(&moa.bufOp, op)
 		}
 	}
 }
@@ -803,12 +780,11 @@ func (chgset *ChangeSet) MakeSplice(oldFullText string, spliceStart, numRemoved 
 	oldText := SubString(oldFullText, spliceStart, spliceStart+numRemoved)
 	chgset.NewLen = chgset.OldLen + len(newText) - len(oldText)
 
-	assem := NewSmartOpAssembler()
+	assem := smartOpAssembler{}
 	assem.appendOpWithText("=", SubString(oldFullText, 0, spliceStart), "", nil)
 	assem.appendOpWithText("-", oldText, "", nil)
 	assem.appendOpWithText("+", newText, optNewTextAPairs, nil)
 	assem.endDocument()
-	q.Q(assem)
 	chgset.Ops = assem.toString()
 	chgset.CharBank = newText
 	return chgset.Pack()
