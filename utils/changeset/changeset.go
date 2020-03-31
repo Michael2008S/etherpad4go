@@ -48,11 +48,11 @@ type Operator struct {
  */
 func NewOperatorIterator(opsStr string, optStartIndex int) *OperatorIterator {
 	opIter := OperatorIterator{}
+	opIter.OpsStr = opsStr
 	opIter.regex = `((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=])([0-9a-z]+)|\?|`
 	opIter.startIndex = optStartIndex
 	opIter.curIndex = opIter.startIndex
 	opIter.prevIndex = opIter.curIndex
-	opIter.OpsStr = opsStr
 
 	opIter.nextRegexMatch()
 
@@ -394,6 +394,7 @@ type stringIterator struct {
 
 func NewStringIterator(str string) stringIterator {
 	si := stringIterator{}
+	si.str = str
 	si.newLines = len(strings.Split(str, "\n")) - 1
 
 	return si
@@ -431,8 +432,8 @@ func (si *stringIterator) remaining() int {
 }
 
 func (si *stringIterator) assertRemaining(n int) error {
-	if n <= si.remaining() {
-		return errors.New(fmt.Sprintf("!(%d <= %d )", n, si.remaining()))
+	if !(n <= si.remaining()) {
+		return errors.New(fmt.Sprintf("assertRemaining: !(%d <= %d )", n, si.remaining()))
 	}
 	return nil
 }
@@ -454,12 +455,12 @@ func (chgset *ChangeSet) Unpack(cs string) error {
 	}
 	changeMag, _ := strconv.ParseInt(headerMatch[3], 36, 32)
 	chgset.NewLen = int(oldLen) + changeSign*int(changeMag)
-	opsStart := len(headerMatch)
+	opsStart := len(headerMatch[0])
 	opsEnd := strings.Index(cs, "$")
 	if opsEnd < 0 {
 		opsEnd = len(cs)
 	}
-	chgset.Ops = SubString(cs, opsStart+1, opsEnd)
+	chgset.Ops = SubString(cs, opsStart, opsEnd)
 	chgset.CharBank = SubString(cs, opsEnd+1, len(cs))
 	return nil
 }
