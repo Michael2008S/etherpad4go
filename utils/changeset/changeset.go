@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jinzhu/copier"
+	"github.com/y0ssar1an/q"
 	"log"
 	"regexp"
 	"strconv"
@@ -255,6 +256,7 @@ func (soa *smartOpAssembler) appendOpWithText(opCode, text, attribs string, pool
 		op.Lines = 0
 		soa.append(op)
 	}
+	q.Q(op)
 }
 
 func (soa *smartOpAssembler) toString() string {
@@ -284,16 +286,16 @@ func (soa *smartOpAssembler) GetLengthChange() int {
  */
 type stringAssembler []string
 
-func (sa stringAssembler) append(s string) {
-	sa = append(sa, s)
+func (sa *stringAssembler) append(s string) {
+	*sa = append(*sa, s)
 }
 
-func (sa stringAssembler) toString() string {
-	return strings.Join(sa, "")
+func (sa *stringAssembler) toString() string {
+	return strings.Join(*sa, "")
 }
 
-func (sa stringAssembler) clear() {
-	sa = []string{}
+func (sa *stringAssembler) clear() {
+	*sa = []string{}
 }
 
 //func mergingOpAssembler() {
@@ -325,6 +327,8 @@ type mergingOpAssembler struct {
 }
 
 func (moa *mergingOpAssembler) flush(isEndDocument bool) {
+	q.Q("mergingOpAssembler.flush:", moa.bufOp)
+
 	if moa.bufOp.OpCode != "" {
 		if isEndDocument && moa.bufOp.OpCode == "=" && moa.bufOp.attribs != "" {
 			// final merged keep, leave it implicit
@@ -343,6 +347,7 @@ func (moa *mergingOpAssembler) flush(isEndDocument bool) {
 
 func (moa *mergingOpAssembler) append(op Operator) {
 	if op.Chars > 0 {
+		q.Q("moa.append:", op)
 		if moa.bufOp.OpCode == op.OpCode && moa.bufOp.attribs == op.attribs {
 			if op.Lines > 0 {
 				// bufOp and additional chars are all mergeable into a multi-line op
@@ -353,6 +358,7 @@ func (moa *mergingOpAssembler) append(op Operator) {
 				// both bufOp and op are in-line
 				moa.bufOp.Chars += op.Chars
 			} else {
+				// append in-line text to multi-line bufOp
 				moa.bufOpAdditionalCharsAfterNewline += op.Chars
 			}
 		} else {
@@ -379,20 +385,20 @@ func (moa *mergingOpAssembler) clear() {
 // this function allows op to be mutated later (doesn't keep a ref)
 type OperatorAssembler []string
 
-func (oa OperatorAssembler) Append(op Operator) {
-	oa = append(oa, op.attribs)
+func (oa *OperatorAssembler) Append(op Operator) {
+	*oa = append(*oa, op.attribs)
 	if op.Lines > 0 {
-		oa = append(oa, "|", strconv.Itoa(op.Lines))
+		*oa = append(*oa, "|", strconv.FormatInt(int64(op.Lines), 36))
 	}
-	oa = append(oa, op.OpCode, strconv.Itoa(op.Chars))
+	*oa = append(*oa, op.OpCode, strconv.FormatInt(int64(op.Chars), 36))
 }
 
-func (oa OperatorAssembler) toString() string {
-	return strings.Join(oa, "")
+func (oa *OperatorAssembler) toString() string {
+	return strings.Join(*oa, "")
 }
 
-func (oa OperatorAssembler) clear() {
-	oa = OperatorAssembler{}
+func (oa *OperatorAssembler) clear() {
+	*oa = OperatorAssembler{}
 }
 
 /**
@@ -802,6 +808,7 @@ func (chgset *ChangeSet) MakeSplice(oldFullText string, spliceStart, numRemoved 
 	assem.appendOpWithText("-", oldText, "", nil)
 	assem.appendOpWithText("+", newText, optNewTextAPairs, nil)
 	assem.endDocument()
+	q.Q(assem)
 	chgset.Ops = assem.toString()
 	chgset.CharBank = newText
 	return chgset.Pack()
@@ -844,7 +851,7 @@ func moveOpsToNewPool(cs string, oldPool, newPool AttributePool) string {
 	pair := oldPool.GetAttrib(int(oldNum))
 	// TODO if(!pair) exports.error('Can\'t copy unknown attrib (reference attrib string to non-existant pool entry). Inconsistent attrib state!');
 	newNum := newPool.PutAttrib(pair, false)
-	return rgx.ReplaceAllString(upToDollar, strconv.Itoa(newNum)) + fromDollar
+	return rgx.ReplaceAllString(upToDollar, strconv.FormatInt(int64(newNum), 36)) + fromDollar
 }
 
 /**
