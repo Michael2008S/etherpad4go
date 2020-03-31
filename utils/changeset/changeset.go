@@ -168,6 +168,17 @@ func (chgset *ChangeSet) CheckRep(cs string) (err error) {
  * ==================== Util Functions =======================
  */
 
+func NewSmartOpAssembler() smartOpAssembler {
+	return smartOpAssembler{
+		minusAssem:   NewMergingOpAssembler(),
+		plusAssem:    NewMergingOpAssembler(),
+		keepAssem:    NewMergingOpAssembler(),
+		assem:        stringAssembler{},
+		lastOpcode:   "",
+		lengthChange: 0,
+	}
+}
+
 /**
  * creates an object that allows you to append operations (type Op) and also
  * compresses them if possible
@@ -289,6 +300,13 @@ func (sa stringAssembler) clear() {
 //	assem := opAssembler()
 //	bufOp := newOp()
 //}
+func NewMergingOpAssembler() mergingOpAssembler {
+	return mergingOpAssembler{
+		assem:                            OperatorAssembler{},
+		bufOp:                            Operator{},
+		bufOpAdditionalCharsAfterNewline: 0,
+	}
+}
 
 type mergingOpAssembler struct {
 	// This assembler can be used in production; it efficiently
@@ -519,12 +537,12 @@ func applyZip(in1, in2 string, idx1, idx2 int, aFunc func(Operator, Operator, Op
  */
 func (chgset *ChangeSet) Pack() string {
 	lenDiff := chgset.NewLen - chgset.OldLen
-	lenDiffStr := "<"
+	lenDiffStr := "<" + strconv.FormatInt(int64(-lenDiff), 36)
 	if lenDiff > 0 {
-		lenDiffStr = ">"
+		lenDiffStr = ">" + strconv.FormatInt(int64(lenDiff), 36)
 	}
-	return fmt.Sprintf("Z:%s%s%s%s$%s", strconv.FormatInt(int64(chgset.OldLen), 36), lenDiffStr,
-		strconv.FormatInt(int64(lenDiff), 36), chgset.Ops, chgset.CharBank)
+	return fmt.Sprintf("Z:%s%s%s$%s", strconv.FormatInt(int64(chgset.OldLen), 36), lenDiffStr,
+		chgset.Ops, chgset.CharBank)
 }
 
 /**
@@ -777,9 +795,9 @@ func (chgset *ChangeSet) MakeSplice(oldFullText string, spliceStart, numRemoved 
 		numRemoved = chgset.OldLen - spliceStart
 	}
 	oldText := SubString(oldFullText, spliceStart, spliceStart+numRemoved)
-	chgset.NewLen = chgset.OldLen + len(newText) - chgset.OldLen
+	chgset.NewLen = chgset.OldLen + len(newText) - len(oldText)
 
-	assem := smartOpAssembler{}
+	assem := NewSmartOpAssembler()
 	assem.appendOpWithText("=", SubString(oldFullText, 0, spliceStart), "", nil)
 	assem.appendOpWithText("-", oldText, "", nil)
 	assem.appendOpWithText("+", newText, optNewTextAPairs, nil)
