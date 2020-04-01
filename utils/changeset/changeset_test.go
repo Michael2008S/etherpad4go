@@ -37,6 +37,7 @@ func TestChangeSet_MakeSplice(t *testing.T) {
 	text := `Welcome to Etherpad!
 
 This pad text is synchronized~ https://github.com/ether/etherpad-lite
+
 `
 	//text = "Welcome to Etherpad!\\n\\nThis pad text is synchronized~ https:\\/\\/github.com\\/ether\\/etherpad-lite\\n"
 	q.Q(text)
@@ -51,10 +52,18 @@ This pad text is synchronized~ https://github.com/ether/etherpad-lite
 		Text:    "\n",
 		Attribs: "|1+1",
 	}
+	atext = AText{
+		Text:    "",
+		Attribs: "",
+	}
 	pool := AttributePool{}
 	newText := chgset.ApplyToAText(cs, atext, pool)
 
 	q.Q(newText)
+
+	reqcs := "Z:2l>1|3=2k*0+1$a"
+	reqAtext := chgset.ApplyToAText(reqcs, newText, pool)
+	q.Q(reqAtext)
 
 }
 
