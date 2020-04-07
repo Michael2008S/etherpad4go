@@ -23,6 +23,9 @@ console.log(atext, apad.pool);
 newAText = Changeset.applyToAText(firstChangeset, apad.atext, apad.pool);
 console.log(newAText);
 
+console.log("====================test new applyToAText==================")
+
 reqCs = "Z:2l>1|3=2k*0+1$a";
 reqAtext = Changeset.applyToAText(reqCs,newAText,apad.pool);
 console.log(reqAtext);
+// |3+2k*0+1|1+1

@@ -64,6 +64,7 @@ func (opIter *OperatorIterator) nextRegexMatch() error {
 	reg := regexp.MustCompile(opIter.regex)
 	opsStr := SubString(opIter.OpsStr, opIter.prevIndex, len(opIter.OpsStr))
 	opIter.rgxResult = reg.FindStringSubmatch(opsStr)
+	q.Q("nextRegexMatch=>", opsStr, opIter.rgxResult)
 	if len(opIter.rgxResult) > 0 {
 		if opIter.rgxResult[0] == "?" {
 			return errors.New("Hit error opcode in op stream.")
@@ -491,6 +492,7 @@ func textLinesMutator() {
  */
 
 func applyZip(in1, in2 string, idx1, idx2 int, aFunc func(*Operator, *Operator, *Operator)) string {
+	q.Q(in1, in2)
 	iter1 := NewOperatorIterator(in1, idx1)
 	iter2 := NewOperatorIterator(in2, idx2)
 	assem := smartOpAssembler{}
@@ -504,6 +506,7 @@ func applyZip(in1, in2 string, idx1, idx2 int, aFunc func(*Operator, *Operator, 
 		if len(op2.OpCode) <= 0 && iter2.HasNext() {
 			op2 = iter2.Next()
 		}
+		q.Q(op1, op2, opOut)
 		aFunc(&op1, &op2, &opOut)
 		if len(opOut.OpCode) > 0 {
 			//print(opOut.toSource());
@@ -512,6 +515,7 @@ func applyZip(in1, in2 string, idx1, idx2 int, aFunc func(*Operator, *Operator, 
 		}
 	}
 	assem.endDocument()
+	q.Q(assem.toString())
 	return assem.toString()
 }
 

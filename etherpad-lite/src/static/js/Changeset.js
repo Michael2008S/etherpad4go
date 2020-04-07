@@ -127,6 +127,7 @@ exports.opIterator = function (opsStr, optStartIndex) {
     var result;
     regex.lastIndex = curIndex;
     result = regex.exec(opsStr);
+    console.log( "nextRegexMatch=>", opsStr,result);
     curIndex = regex.lastIndex;
     if (result[0] == '?') {
       exports.error("Hit error opcode in op stream");
@@ -842,6 +843,7 @@ exports.textLinesMutator = function (lines) {
  * @return {string} the integrated changeset
  */
 exports.applyZip = function (in1, idx1, in2, idx2, func) {
+  console.log(in1,in2);
   var iter1 = exports.opIterator(in1, idx1);
   var iter2 = exports.opIterator(in2, idx2);
   var assem = exports.smartOpAssembler();
@@ -851,6 +853,10 @@ exports.applyZip = function (in1, idx1, in2, idx2, func) {
   while (op1.opcode || iter1.hasNext() || op2.opcode || iter2.hasNext()) {
     if ((!op1.opcode) && iter1.hasNext()) iter1.next(op1);
     if ((!op2.opcode) && iter2.hasNext()) iter2.next(op2);
+    console.log("op1=",op1);
+    console.log("op2=",op2);
+    console.log("opOut=",opOut);
+    console.log("------");
     func(op1, op2, opOut);
     if (opOut.opcode) {
       //print(opOut.toSource());
@@ -859,6 +865,7 @@ exports.applyZip = function (in1, idx1, in2, idx2, func) {
     }
   }
   assem.endDocument();
+  console.log((assem.toString()))
   return assem.toString();
 };
 

@@ -15,7 +15,7 @@ func Error() {
  * @param b {boolean} assertion condition
  * @param msgParts {string} error to be passed if it fails
  */
-func assert() {
+func _assert() {
 
 }
 

@@ -2,6 +2,7 @@ package changeset
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"github.com/y0ssar1an/q"
 	"strings"
 	"testing"
@@ -61,9 +62,14 @@ This pad text is synchronized~ https://github.com/ether/etherpad-lite
 
 	q.Q(newText)
 
+	q.Q("====================test new applyToAText==================")
+
 	reqcs := "Z:2l>1|3=2k*0+1$a"
 	reqAtext := chgset.ApplyToAText(reqcs, newText, pool)
 	q.Q(reqAtext)
+	expTxt := "Welcome to Etherpad!\n\nThis pad text is synchronized~ https://github.com/ether/etherpad-lite\na\n"
+	assert.Equal(t, expTxt, reqAtext.Text)
+	assert.Equal(t, "|3+2k*0+1|1+1", reqAtext.Attribs)
 
 }
 
