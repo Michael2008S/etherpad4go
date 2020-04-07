@@ -127,7 +127,7 @@ exports.opIterator = function (opsStr, optStartIndex) {
     var result;
     regex.lastIndex = curIndex;
     result = regex.exec(opsStr);
-    console.log( "nextRegexMatch=>", opsStr,result);
+    // console.log( "nextRegexMatch=>", opsStr,result);
     curIndex = regex.lastIndex;
     if (result[0] == '?') {
       exports.error("Hit error opcode in op stream");
@@ -843,7 +843,7 @@ exports.textLinesMutator = function (lines) {
  * @return {string} the integrated changeset
  */
 exports.applyZip = function (in1, idx1, in2, idx2, func) {
-  console.log(in1,in2);
+  // console.log(in1,in2);
   var iter1 = exports.opIterator(in1, idx1);
   var iter2 = exports.opIterator(in2, idx2);
   var assem = exports.smartOpAssembler();
@@ -868,7 +868,7 @@ exports.applyZip = function (in1, idx1, in2, idx2, func) {
     // console.log("------");
   }
   assem.endDocument();
-  console.log((assem.toString()))
+  // console.log((assem.toString()));
   return assem.toString();
 };
 
@@ -1059,10 +1059,10 @@ exports._slicerZipperFunc = function (attOp, csOp, opOut, pool) {
   // attribution string or the earlier of two exportss being composed.
   // pool can be null if definitely not needed.
   //print(csOp.toSource()+" "+attOp.toSource()+" "+opOut.toSource());
-  console.log("attOp=",attOp)
-  console.log("csOp=",csOp)
-  console.log("opOut=",opOut)
-  console.log("-------")
+  // console.log("attOp=",attOp)
+  // console.log("csOp=",csOp)
+  // console.log("opOut=",opOut)
+  // console.log("-------")
   if (attOp.opcode == '-') {
     exports.copyOp(attOp, opOut);
     attOp.opcode = '';
@@ -1144,10 +1144,10 @@ exports._slicerZipperFunc = function (attOp, csOp, opOut, pool) {
       }
     }
   }
-  console.log("attOp=",attOp)
-  console.log("csOp=",csOp)
-  console.log("opOut=",opOut)
-  console.log("++++++")
+  // console.log("attOp=",attOp)
+  // console.log("csOp=",csOp)
+  // console.log("opOut=",opOut)
+  // console.log("++++++")
 };
 
 /**

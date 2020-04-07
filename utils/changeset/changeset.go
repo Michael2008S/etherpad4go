@@ -521,7 +521,7 @@ func applyZip(in1, in2 string, idx1, idx2 int, aFunc func(*Operator, *Operator, 
 		//q.Q("--------")
 	}
 	assem.endDocument()
-	q.Q(assem.toString())
+	//q.Q(assem.toString())
 	return assem.toString()
 }
 
@@ -639,8 +639,8 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 	// attribution string or the earlier of two exportss being composed.
 	// pool can be null if definitely not needed.
 	//print(csOp.toSource()+" "+attOp.toSource()+" "+opOut.toSource());
-	q.Q(attOp, csOp, opOut, pool)
-	q.Q("-------")
+	//q.Q(attOp, csOp, opOut, pool)
+	//q.Q("-------")
 	if attOp.OpCode == "-" {
 		copier.Copy(opOut, attOp)
 		attOp.OpCode = ""
@@ -678,9 +678,7 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 			}
 		case "+":
 			// insert
-			q.Q("cpy bf:", csOp, opOut)
-			copier.Copy(&opOut, &csOp)
-			q.Q("cpy af:", opOut, csOp)
+			copier.Copy(opOut, csOp)
 			csOp.OpCode = ""
 		case "=":
 			if csOp.Chars <= attOp.Chars {
@@ -712,8 +710,8 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 			attOp.OpCode = ""
 		}
 	}
-	q.Q(attOp, csOp, opOut, pool)
-	q.Q("++++++++")
+	//q.Q(attOp, csOp, opOut, pool)
+	//q.Q("++++++++")
 }
 
 /**
@@ -911,7 +909,7 @@ func makeAText(text, attribs string) AText {
 
 type AText struct {
 	Text    string `json:"text"`
-	Attribs string `json:"Attribs"`
+	Attribs string `json:"attribs"`
 }
 
 /**
