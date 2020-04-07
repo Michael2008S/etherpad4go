@@ -7,6 +7,7 @@ import (
 	"github.com/Michael2008S/etherpad4go/model"
 	bgStore "github.com/Michael2008S/etherpad4go/store"
 	"github.com/Michael2008S/etherpad4go/utils/changeset"
+	"github.com/y0ssar1an/q"
 	"log"
 	"net/http"
 	"time"
@@ -206,6 +207,8 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 	//atext.Attribs = "|4+2l"
 	//atext.Text = "Welcome to Etherpad!\n\nThis pad text is synchronized~ https://github.com/ether/etherpad-lite\n\n"
 	translated, newPool := changeset.PrepareForWire(atext.Attribs, pad.Pool)
+
+	q.Q(atext.Attribs, translated, newPool)
 	//apool := newPool.ToJsonAble
 	atext.Attribs = translated
 
