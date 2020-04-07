@@ -853,16 +853,19 @@ exports.applyZip = function (in1, idx1, in2, idx2, func) {
   while (op1.opcode || iter1.hasNext() || op2.opcode || iter2.hasNext()) {
     if ((!op1.opcode) && iter1.hasNext()) iter1.next(op1);
     if ((!op2.opcode) && iter2.hasNext()) iter2.next(op2);
-    console.log("op1=",op1);
-    console.log("op2=",op2);
-    console.log("opOut=",opOut);
-    console.log("------");
+
     func(op1, op2, opOut);
     if (opOut.opcode) {
       //print(opOut.toSource());
       assem.append(opOut);
       opOut.opcode = '';
     }
+    // console.log("op1=",op1);
+    // console.log("op2=",op2);
+    // console.log("opOut=",opOut);
+    // console.log(assem.toString());
+    // console.log(iter1.hasNext(),iter2.hasNext());
+    // console.log("------");
   }
   assem.endDocument();
   console.log((assem.toString()))
@@ -1056,6 +1059,10 @@ exports._slicerZipperFunc = function (attOp, csOp, opOut, pool) {
   // attribution string or the earlier of two exportss being composed.
   // pool can be null if definitely not needed.
   //print(csOp.toSource()+" "+attOp.toSource()+" "+opOut.toSource());
+  console.log("attOp=",attOp)
+  console.log("csOp=",csOp)
+  console.log("opOut=",opOut)
+  console.log("-------")
   if (attOp.opcode == '-') {
     exports.copyOp(attOp, opOut);
     attOp.opcode = '';
@@ -1109,6 +1116,7 @@ exports._slicerZipperFunc = function (attOp, csOp, opOut, pool) {
           opOut.chars = csOp.chars;
           opOut.lines = csOp.lines;
           opOut.attribs = exports.composeAttributes(attOp.attribs, csOp.attribs, attOp.opcode == '=', pool);
+          console.log("=1  opOut.attribs=", opOut.attribs)
           csOp.opcode = '';
           attOp.chars -= csOp.chars;
           attOp.lines -= csOp.lines;
@@ -1121,6 +1129,7 @@ exports._slicerZipperFunc = function (attOp, csOp, opOut, pool) {
           opOut.chars = attOp.chars;
           opOut.lines = attOp.lines;
           opOut.attribs = exports.composeAttributes(attOp.attribs, csOp.attribs, attOp.opcode == '=', pool);
+          console.log("=2  opOut.attribs=", opOut.attribs)
           attOp.opcode = '';
           csOp.chars -= attOp.chars;
           csOp.lines -= attOp.lines;
@@ -1135,6 +1144,10 @@ exports._slicerZipperFunc = function (attOp, csOp, opOut, pool) {
       }
     }
   }
+  console.log("attOp=",attOp)
+  console.log("csOp=",csOp)
+  console.log("opOut=",opOut)
+  console.log("++++++")
 };
 
 /**

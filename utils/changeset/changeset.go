@@ -64,7 +64,7 @@ func (opIter *OperatorIterator) nextRegexMatch() error {
 	reg := regexp.MustCompile(opIter.regex)
 	opsStr := SubString(opIter.OpsStr, opIter.prevIndex, len(opIter.OpsStr))
 	opIter.rgxResult = reg.FindStringSubmatch(opsStr)
-	q.Q("nextRegexMatch=>", opsStr, opIter.rgxResult)
+	q.Q("nextRegexMatch=>", opIter.OpsStr, opIter.rgxResult, opIter.curIndex)
 	if len(opIter.rgxResult) > 0 {
 		if opIter.rgxResult[0] == "?" {
 			return errors.New("Hit error opcode in op stream.")
@@ -506,13 +506,19 @@ func applyZip(in1, in2 string, idx1, idx2 int, aFunc func(*Operator, *Operator, 
 		if len(op2.OpCode) <= 0 && iter2.HasNext() {
 			op2 = iter2.Next()
 		}
-		q.Q(op1, op2, opOut)
+
 		aFunc(&op1, &op2, &opOut)
 		if len(opOut.OpCode) > 0 {
 			//print(opOut.toSource());
+			//tmpOp := Operator{}
+			//copier.Copy(&tmpOp, opOut)
+			//assem.append(tmpOp)
 			assem.append(opOut)
 			opOut.OpCode = ""
 		}
+		//q.Q(op1, op2, opOut, assem.toString())
+		//q.Q(iter1.HasNext(),iter2.HasNext())
+		//q.Q("--------")
 	}
 	assem.endDocument()
 	q.Q(assem.toString())
@@ -633,6 +639,8 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 	// attribution string or the earlier of two exportss being composed.
 	// pool can be null if definitely not needed.
 	//print(csOp.toSource()+" "+attOp.toSource()+" "+opOut.toSource());
+	q.Q(attOp, csOp, opOut, pool)
+	q.Q("-------")
 	if attOp.OpCode == "-" {
 		copier.Copy(opOut, attOp)
 		attOp.OpCode = ""
@@ -679,10 +687,11 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 				opOut.Chars = csOp.Chars
 				opOut.Lines = csOp.Lines
 				opOut.attribs = ComposeAttributes(attOp.attribs, csOp.attribs, attOp.OpCode == "=", pool)
+				q.Q("=1", opOut.attribs)
 				csOp.OpCode = ""
 				attOp.Chars -= csOp.Chars
 				attOp.Lines -= csOp.Lines
-				if attOp.Chars > 0 {
+				if attOp.Chars <= 0 {
 					attOp.OpCode = ""
 				}
 			} else {
@@ -691,6 +700,7 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 				opOut.Chars = attOp.Chars
 				opOut.Lines = attOp.Lines
 				opOut.attribs = ComposeAttributes(attOp.attribs, csOp.attribs, attOp.OpCode == "=", pool)
+				q.Q("=2", opOut.attribs)
 				attOp.OpCode = ""
 				csOp.Chars -= attOp.Chars
 				csOp.Lines -= attOp.Lines
@@ -700,6 +710,8 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 			attOp.OpCode = ""
 		}
 	}
+	q.Q(attOp, csOp, opOut, pool)
+	q.Q("++++++++")
 }
 
 /**
