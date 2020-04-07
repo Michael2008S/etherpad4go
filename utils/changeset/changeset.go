@@ -37,7 +37,7 @@ type Operator struct {
 	OpCode  string
 	Chars   int
 	Lines   int
-	attribs string
+	Attribs string
 }
 
 /**
@@ -77,7 +77,7 @@ func (opIter *OperatorIterator) nextRegexMatch() error {
 func (opIter *OperatorIterator) Next() Operator {
 	op := Operator{}
 	if len(opIter.rgxResult) > 0 && len(opIter.rgxResult[0]) > 0 {
-		op.attribs = opIter.rgxResult[1]
+		op.Attribs = opIter.rgxResult[1]
 		lines, _ := strconv.ParseInt(opIter.rgxResult[2], 36, 32)
 		op.Lines = int(lines)
 		op.OpCode = opIter.rgxResult[3]
@@ -232,7 +232,7 @@ func (soa *smartOpAssembler) append(op Operator) {
 func (soa *smartOpAssembler) appendOpWithText(opCode, text, attribs string, pool *AttributePool) {
 	op := Operator{}
 	op.OpCode = opCode
-	op.attribs = makeAttribsString(opCode, attribs, pool)
+	op.Attribs = makeAttribsString(opCode, attribs, pool)
 	lastNewlinePos := strings.LastIndex(text, "\n")
 	if lastNewlinePos < 0 {
 		op.Chars = len(text)
@@ -313,7 +313,7 @@ type mergingOpAssembler struct {
 
 func (moa *mergingOpAssembler) flush(isEndDocument bool) {
 	if moa.bufOp.OpCode != "" {
-		if isEndDocument && moa.bufOp.OpCode == "=" && moa.bufOp.attribs != "" {
+		if isEndDocument && moa.bufOp.OpCode == "=" && moa.bufOp.Attribs != "" {
 			// final merged keep, leave it implicit
 		} else {
 			moa.assem.Append(moa.bufOp)
@@ -330,7 +330,7 @@ func (moa *mergingOpAssembler) flush(isEndDocument bool) {
 
 func (moa *mergingOpAssembler) append(op Operator) {
 	if op.Chars > 0 {
-		if moa.bufOp.OpCode == op.OpCode && moa.bufOp.attribs == op.attribs {
+		if moa.bufOp.OpCode == op.OpCode && moa.bufOp.Attribs == op.Attribs {
 			if op.Lines > 0 {
 				// bufOp and additional chars are all mergeable into a multi-line op
 				moa.bufOp.Chars += moa.bufOpAdditionalCharsAfterNewline + op.Chars
@@ -368,7 +368,7 @@ func (moa *mergingOpAssembler) clear() {
 type OperatorAssembler []string
 
 func (oa *OperatorAssembler) Append(op Operator) {
-	*oa = append(*oa, op.attribs)
+	*oa = append(*oa, op.Attribs)
 	if op.Lines > 0 {
 		*oa = append(*oa, "|", strconv.FormatInt(int64(op.Lines), 36))
 	}
@@ -656,7 +656,7 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 					opOut.OpCode = "-"
 					opOut.Chars = csOp.Chars
 					opOut.Lines = csOp.Lines
-					opOut.attribs = ""
+					opOut.Attribs = ""
 				}
 				attOp.Chars -= csOp.Chars
 				attOp.Lines -= csOp.Lines
@@ -670,7 +670,7 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 					opOut.OpCode = "-"
 					opOut.Chars = attOp.Chars
 					opOut.Lines = attOp.Lines
-					opOut.attribs = ""
+					opOut.Attribs = ""
 				}
 				csOp.Chars -= attOp.Chars
 				csOp.Lines -= attOp.Lines
@@ -678,7 +678,9 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 			}
 		case "+":
 			// insert
-			copier.Copy(opOut, csOp)
+			q.Q("cpy bf:", csOp, opOut)
+			copier.Copy(&opOut, &csOp)
+			q.Q("cpy af:", opOut, csOp)
 			csOp.OpCode = ""
 		case "=":
 			if csOp.Chars <= attOp.Chars {
@@ -686,8 +688,8 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 				opOut.OpCode = attOp.OpCode
 				opOut.Chars = csOp.Chars
 				opOut.Lines = csOp.Lines
-				opOut.attribs = ComposeAttributes(attOp.attribs, csOp.attribs, attOp.OpCode == "=", pool)
-				q.Q("=1", opOut.attribs)
+				opOut.Attribs = ComposeAttributes(attOp.Attribs, csOp.Attribs, attOp.OpCode == "=", pool)
+				q.Q("=1", opOut.Attribs)
 				csOp.OpCode = ""
 				attOp.Chars -= csOp.Chars
 				attOp.Lines -= csOp.Lines
@@ -699,8 +701,8 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 				opOut.OpCode = attOp.OpCode
 				opOut.Chars = attOp.Chars
 				opOut.Lines = attOp.Lines
-				opOut.attribs = ComposeAttributes(attOp.attribs, csOp.attribs, attOp.OpCode == "=", pool)
-				q.Q("=2", opOut.attribs)
+				opOut.Attribs = ComposeAttributes(attOp.Attribs, csOp.Attribs, attOp.OpCode == "=", pool)
+				q.Q("=2", opOut.Attribs)
 				attOp.OpCode = ""
 				csOp.Chars -= attOp.Chars
 				csOp.Lines -= attOp.Lines
@@ -715,9 +717,9 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 }
 
 /**
- * Applies a Changeset to the attribs string of a AText.
+ * Applies a Changeset to the Attribs string of a AText.
  * @param cs {string} Changeset
- * @param astr {string} the attribs string of a AText
+ * @param astr {string} the Attribs string of a AText
  * @param pool {AttribsPool} the attibutes pool
  */
 func (chgset *ChangeSet) ApplyToAttribution(cs, str string, pool AttributePool) string {
@@ -841,7 +843,7 @@ func moveOpsToNewPool(cs string, oldPool, newPool AttributePool) string {
 	}
 	upToDollar := SubString(cs, 0, dollarPos)
 	fromDollar := SubStrLen(cs, dollarPos, len(cs)) // FIXME
-	// order of attribs stays the same
+	// order of Attribs stays the same
 	rgx, _ := regexp.Compile(`\*([0-9a-z]+)`)
 	a := rgx.FindString(upToDollar)
 	oldNum, _ := strconv.ParseInt(a, 36, 32)
@@ -862,7 +864,7 @@ func makeAttribution(text string) string {
 }
 
 /**
- * Iterates over attributes in exports, attribution string, or attribs property of an op
+ * Iterates over attributes in exports, attribution string, or Attribs property of an op
  * and runs function func on them
  * @param cs {Changeset} changeset
  * @param func {function} function to be called
@@ -873,7 +875,7 @@ func eachAttribNumber() {
 
 /**
  * Filter attributes which should remain in a Changeset
- * callable on a exports, attribution string, or attribs property of an op,
+ * callable on a exports, attribution string, or Attribs property of an op,
  * though it may easily create adjacent ops that can be merged.
  * @param cs {Changeset} changeset to be filtered
  * @param filter {function} fnc which returns true if an
@@ -893,7 +895,7 @@ func mapAttribNumbers() {
 /**
  * Create a Changeset going from Identity to a certain state
  * @params text {string} text of the final change
- * @attribs attribs {string} optional, operations which insert
+ * @Attribs Attribs {string} optional, operations which insert
  *    the text and also puts the right attributes
  */
 func makeAText(text, attribs string) AText {
@@ -909,7 +911,7 @@ func makeAText(text, attribs string) AText {
 
 type AText struct {
 	Text    string `json:"text"`
-	Attribs string `json:"attribs"`
+	Attribs string `json:"Attribs"`
 }
 
 /**
@@ -971,8 +973,8 @@ func isIdentity() {
 
 /**
  * returns all the values of attributes with a certain key
- * in an Op attribs string
- * @param attribs {string} Attribute string of a Op
+ * in an Op Attribs string
+ * @param Attribs {string} Attribute string of a Op
  * @param key {string} string to be seached for
  * @param pool {AttribPool} attribute pool
  */
@@ -982,8 +984,8 @@ func opAttributeValue() {
 
 /**
  * returns all the values of attributes with a certain key
- * in an attribs string
- * @param attribs {string} Attribute string
+ * in an Attribs string
+ * @param Attribs {string} Attribute string
  * @param key {string} string to be seached for
  * @param pool {AttribPool} attribute pool
  */
@@ -1012,11 +1014,11 @@ type Builder struct {
 	charBank stringAssembler
 }
 
-// attribs are [[key1,value1],[key2,value2],...] or '*0*1...' (no pool needed in latter case)
+// Attribs are [[key1,value1],[key2,value2],...] or '*0*1...' (no pool needed in latter case)
 func (b *Builder) Keep(N, L int, attribs string, pool AttributePool) {
 	b.o.OpCode = "="
-	//  FIXME     o.attribs = (attribs && exports.makeAttribsString('=', attribs, pool)) || '';
-	b.o.attribs = attribs
+	//  FIXME     o.Attribs = (Attribs && exports.makeAttribsString('=', Attribs, pool)) || '';
+	b.o.Attribs = attribs
 	b.o.Chars = N
 	b.o.Lines = L
 	b.assem.append(b.o)
@@ -1033,7 +1035,7 @@ func (b *Builder) Insert(text, attribs string, pool AttributePool) {
 
 func (b *Builder) Remove(N, L int) {
 	b.o.OpCode = "-"
-	b.o.attribs = ""
+	b.o.Attribs = ""
 	b.o.Chars = N
 	b.o.Lines = L
 	b.assem.append(b.o)
@@ -1089,7 +1091,7 @@ func composeWithDeletions() {
 
 }
 
-// This function is 95% like _slicerZipperFunc, we just changed two lines to ensure it merges the attribs of deletions properly.
+// This function is 95% like _slicerZipperFunc, we just changed two lines to ensure it merges the Attribs of deletions properly.
 // This is necassary for correct paddiff. But to ensure these changes doesn't affect anything else, we've created a seperate function only used for paddiffs
 func _slicerZipperFuncWithDeletions() {
 	// attOp is the op from the sequence that is being operated on, either an
