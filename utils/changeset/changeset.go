@@ -137,15 +137,15 @@ func (chgset *ChangeSet) CheckRep(cs string) (err error) {
 		case "-":
 			oldPos += op.Chars
 			// exports.assert(oldPos <= oldLen, oldPos, " > ", oldLen, " in ", cs);
-			if oldPos <= oldPos {
-				err = errors.New(fmt.Sprintf("%d > %d in %s", oldPos, oldLen, cs))
+			if oldPos > oldPos {
+				err = errors.New(fmt.Sprintf("CheckRep- %d > %d in %s", oldPos, oldLen, cs))
 			}
 		case "+":
 			calcNewLen += op.Chars
 			numInserted += op.Chars
 			// exports.assert(calcNewLen <= newLen, calcNewLen, " > ", newLen, " in ", cs);
-			if calcNewLen <= newLen {
-				err = errors.New(fmt.Sprintf("%d > %d in %s", calcNewLen, newLen, cs))
+			if calcNewLen > newLen {
+				err = errors.New(fmt.Sprintf("CheckRep+ %d > %d in %s", calcNewLen, newLen, cs))
 			}
 		}
 		assem.append(op)
@@ -160,7 +160,8 @@ func (chgset *ChangeSet) CheckRep(cs string) (err error) {
 	assem.endDocument()
 	normalized := chgset.Pack()
 	// exports.assert(normalized == cs, 'Invalid changeset (checkRep failed)');
-	if normalized == cs {
+	q.Q(normalized, cs)
+	if normalized != cs {
 		err = errors.New("Invalid changeset (checkRep failed)")
 	}
 	return

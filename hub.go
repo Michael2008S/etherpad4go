@@ -148,7 +148,7 @@ func (h *Hub) handleUserChanges(msg InboundMsg) error {
 	chgset := changeset.ChangeSet{}
 	if err := chgset.CheckRep(cs); err != nil {
 		log.Println(err)
-		//return nil
+		return err
 	}
 	// Verify that the attribute indexes used in the changeset are all
 	// defined in the accompanying attribute pool.
