@@ -57,22 +57,18 @@ type ClientVarsDataResp struct {
 }
 
 type CollabClientVars struct {
-	InitialAttributedText changeset.AText `json:"initialAttributedText"`
-	ClientIP              string          `json:"clientIp"`
-	PadID                 string          `json:"padId"`
-	HistoricalAuthorData  struct {
-		APy0WdSkbof4TM4DD struct {
-			Name    interface{} `json:"name"`
-			ColorID int         `json:"colorId"`
-		} `json:"a.Py0WdSkbof4tM4DD"`
-		AYjK4P2YxGHx8NNgf struct {
-			Name    string `json:"name"`
-			ColorID string `json:"colorId"`
-		} `json:"a.YjK4P2yxGHx8NNgf"`
-	} `json:"historicalAuthorData"`
-	Apool changeset.AttributePool `json:"apool"`
-	Rev   int                     `json:"rev"`
-	Time  int64                   `json:"time"`
+	InitialAttributedText changeset.AText         `json:"initialAttributedText"`
+	ClientIP              string                  `json:"clientIp"`
+	PadID                 string                  `json:"padId"`
+	HistoricalAuthorData  HistoricalAuthorData    `json:"historicalAuthorData"`
+	Apool                 changeset.AttributePool `json:"apool"`
+	Rev                   int                     `json:"rev"`
+	Time                  int64                   `json:"time"`
+}
+
+type HistoricalAuthorData map[string]struct {
+	Name    string `json:"name"`
+	ColorID int    `json:"colorId"`
 }
 
 type PadOptions struct {

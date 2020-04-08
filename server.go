@@ -217,20 +217,14 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 	clientVarsData := api.ClientVarsDataResp{}
 	clientVarsData.SkinName = "no-skin"
 	clientVarsData.PadID = pad.Id
+
+	historicalAuthorData := api.HistoricalAuthorData{}
+
 	collabClientVars := api.CollabClientVars{
 		InitialAttributedText: atext,
 		ClientIP:              "127.0.0.1",
 		PadID:                 pad.Id,
-		HistoricalAuthorData: struct {
-			APy0WdSkbof4TM4DD struct {
-				Name    interface{} `json:"name"`
-				ColorID int         `json:"colorId"`
-			} `json:"a.Py0WdSkbof4tM4DD"`
-			AYjK4P2YxGHx8NNgf struct {
-				Name    string `json:"name"`
-				ColorID string `json:"colorId"`
-			} `json:"a.YjK4P2yxGHx8NNgf"`
-		}{},
+		HistoricalAuthorData:  historicalAuthorData,
 		Apool: newPool,
 		Rev:   pad.GetHeadRevisionNumber(),
 		Time:  time.Now().Unix(),
@@ -268,6 +262,7 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 	if ok {
 		authInfo.rev = pad.GetHeadRevisionNumber()
 		userInfo.UserId = authInfo.author
+		//userInfo.ColorId = authInfo
 	}
 	messageToTheOtherUsers := api.UserNewInfoResp{
 		Type: "COLLABROOM",
