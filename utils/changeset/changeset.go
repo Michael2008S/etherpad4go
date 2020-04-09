@@ -688,7 +688,7 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 				opOut.Chars = csOp.Chars
 				opOut.Lines = csOp.Lines
 				opOut.Attribs = ComposeAttributes(attOp.Attribs, csOp.Attribs, attOp.OpCode == "=", pool)
-				q.Q("=1", opOut.Attribs)
+				//q.Q("=1", opOut.Attribs)
 				csOp.OpCode = ""
 				attOp.Chars -= csOp.Chars
 				attOp.Lines -= csOp.Lines
@@ -701,7 +701,7 @@ func _slicerZipperFunc(attOp, csOp, opOut *Operator, pool AttributePool) {
 				opOut.Chars = attOp.Chars
 				opOut.Lines = attOp.Lines
 				opOut.Attribs = ComposeAttributes(attOp.Attribs, csOp.Attribs, attOp.OpCode == "=", pool)
-				q.Q("=2", opOut.Attribs)
+				//q.Q("=2", opOut.Attribs)
 				attOp.OpCode = ""
 				csOp.Chars -= attOp.Chars
 				csOp.Lines -= attOp.Lines

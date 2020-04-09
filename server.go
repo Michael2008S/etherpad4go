@@ -204,6 +204,7 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 	pad := model.NewPad("q", "", db)
 
 	atext := pad.AText
+	q.Q(pad.AText)
 	//atext.Attribs = "|4+2l"
 	//atext.Text = "Welcome to Etherpad!\n\nThis pad text is synchronized~ https://github.com/ether/etherpad-lite\n\n"
 	translated, newPool := changeset.PrepareForWire(atext.Attribs, pad.Pool)
@@ -236,6 +237,21 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 	clientVarsData.UserID = sessionInfo[client.ID].author
 	clientVarsData.CollabClientVars = collabClientVars
 	clientVarsData.ColorPalette = model.ColorPalette
+
+	clientVarsData.PadOptions = api.PadOptions{
+		NoColors:         false,
+		ShowControls:     true,
+		ShowChat:         false,
+		ShowLineNumbers:  true,
+		UseMonospaceFont: false,
+		UserName:         true,
+		UserColor:        true,
+		Rtl:              false,
+		AlwaysShowChat:   false,
+		ChatAndUsers:     false,
+		Lang:             "",
+	}
+
 	clientVarsResp := api.WarpMsgResp{
 		Type: api.MsgTypeClientVars,
 		Data: clientVarsData,

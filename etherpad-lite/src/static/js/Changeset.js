@@ -1116,7 +1116,7 @@ exports._slicerZipperFunc = function (attOp, csOp, opOut, pool) {
           opOut.chars = csOp.chars;
           opOut.lines = csOp.lines;
           opOut.attribs = exports.composeAttributes(attOp.attribs, csOp.attribs, attOp.opcode == '=', pool);
-          console.log("=1  opOut.attribs=", opOut.attribs)
+          // console.log("=1  opOut.attribs=", opOut.attribs)
           csOp.opcode = '';
           attOp.chars -= csOp.chars;
           attOp.lines -= csOp.lines;
@@ -1129,7 +1129,7 @@ exports._slicerZipperFunc = function (attOp, csOp, opOut, pool) {
           opOut.chars = attOp.chars;
           opOut.lines = attOp.lines;
           opOut.attribs = exports.composeAttributes(attOp.attribs, csOp.attribs, attOp.opcode == '=', pool);
-          console.log("=2  opOut.attribs=", opOut.attribs)
+          // console.log("=2  opOut.attribs=", opOut.attribs)
           attOp.opcode = '';
           csOp.chars -= attOp.chars;
           csOp.lines -= attOp.lines;
@@ -1257,11 +1257,12 @@ exports.mutateAttributionLines = function (cs, lines, pool) {
       }
     }
   }
-
+  console.log("lineAssem=>",lineAssem);
   exports.assert(!lineAssem, "line assembler not finished:"+cs);
   mut.close();
 
   //dmesg("-> "+lines.toSource());
+
 };
 
 /**
