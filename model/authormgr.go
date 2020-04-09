@@ -26,6 +26,10 @@ type AuthorMgr struct {
 	DbStore store.Store
 }
 
+func NewAuthorMgr(db store.Store) *AuthorMgr {
+	return &AuthorMgr{DbStore: db}
+}
+
 type Author struct {
 	ColorID   int    `json:"colorId"`
 	Name      string `json:"name"`
@@ -74,8 +78,12 @@ func (a *AuthorMgr) mapAuthorWithDBKey(mapperKey, mapper string) string {
 	return authorID
 }
 
-func GetAuthor(author string) {
-
+func (a *AuthorMgr) GetAuthor(authorID string) (author Author) {
+	val, b := a.DbStore.Get([]byte(AuthorKey + authorID))
+	if b {
+		json.Unmarshal(val, &author)
+	}
+	return
 }
 
 func ListPadsOfAuthor(authorID string) {

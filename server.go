@@ -220,14 +220,18 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 
 	historicalAuthorData := api.HistoricalAuthorData{}
 
+	authorMgr := model.NewAuthorMgr(db)
+	authorColorId := authorMgr.GetAuthor(sessionInfo[client.ID].author).ColorID
+	clientVarsData.UserColor = authorColorId
+
 	collabClientVars := api.CollabClientVars{
 		InitialAttributedText: atext,
 		ClientIP:              "127.0.0.1",
 		PadID:                 pad.Id,
 		HistoricalAuthorData:  historicalAuthorData,
-		Apool: newPool,
-		Rev:   pad.GetHeadRevisionNumber(),
-		Time:  time.Now().Unix(),
+		Apool:                 newPool,
+		Rev:                   pad.GetHeadRevisionNumber(),
+		Time:                  time.Now().Unix(),
 	}
 	clientVarsData.UserID = sessionInfo[client.ID].author
 	clientVarsData.CollabClientVars = collabClientVars
@@ -250,11 +254,10 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 
 	//sessionInfo[client.ID].rev =pad.GetHeadRevisionNumber()
 	//sessionInfo[client.ID].author =
-
 	// prepare the notification for the other users on the pad, that this user joined
 	userInfo := api.UserInfo{
 		Ip:        "127.0.0.1",
-		ColorId:   0,
+		ColorId:   authorColorId,
 		UserAgent: "Anonymous",
 		UserId:    sessionInfo[client.ID].author,
 	}
@@ -262,7 +265,7 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 	if ok {
 		authInfo.rev = pad.GetHeadRevisionNumber()
 		userInfo.UserId = authInfo.author
-		//userInfo.ColorId = authInfo
+		userInfo.ColorId = authorColorId
 	}
 	messageToTheOtherUsers := api.UserNewInfoResp{
 		Type: "COLLABROOM",
@@ -305,10 +308,11 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 			//return
 		}
 
+		clientColorId := authorMgr.GetAuthor(sessionInfo[clientID].author).ColorID
 		// 发送其他已有的用户到我的 client 中
 		toMyUserInfo := api.UserInfo{
 			Ip:        "127.0.0.1",
-			ColorId:   0,
+			ColorId:   clientColorId,
 			UserAgent: "Anonymous",
 			UserId:    sessionInfo[clientID].author,
 		}
