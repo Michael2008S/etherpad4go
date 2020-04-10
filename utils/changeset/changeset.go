@@ -64,7 +64,7 @@ func (opIter *OperatorIterator) nextRegexMatch() error {
 	reg := regexp.MustCompile(opIter.regex)
 	opsStr := SubString(opIter.OpsStr, opIter.prevIndex, len(opIter.OpsStr))
 	opIter.rgxResult = reg.FindStringSubmatch(opsStr)
-	q.Q("nextRegexMatch=>", opIter.OpsStr, opIter.rgxResult, opIter.curIndex)
+	//q.Q("nextRegexMatch=>", opIter.OpsStr, opIter.rgxResult, opIter.curIndex)
 	if len(opIter.rgxResult) > 0 {
 		if opIter.rgxResult[0] == "?" {
 			return errors.New("Hit error opcode in op stream.")
@@ -834,7 +834,7 @@ func characterRangeFollow() {
  * @param newPool {AttribPool} new attributes pool
  * @return {string} the new Changeset
  */
-func moveOpsToNewPool(cs string, oldPool, newPool AttributePool) string {
+func moveOpsToNewPool(cs string, oldPool, newPool *AttributePool) string {
 	// works on exports or attribution string
 	dollarPos := strings.Index(cs, "$")
 	if dollarPos < 0 {
@@ -844,12 +844,18 @@ func moveOpsToNewPool(cs string, oldPool, newPool AttributePool) string {
 	fromDollar := SubStrLen(cs, dollarPos, len(cs)) // FIXME
 	// order of Attribs stays the same
 	rgx, _ := regexp.Compile(`\*([0-9a-z]+)`)
-	a := rgx.FindString(upToDollar)
-	oldNum, _ := strconv.ParseInt(a, 36, 32)
-	pair := oldPool.GetAttrib(int(oldNum))
-	// TODO if(!pair) exports.error('Can\'t copy unknown attrib (reference attrib string to non-existant pool entry). Inconsistent attrib state!');
-	newNum := newPool.PutAttrib(pair, false)
-	return rgx.ReplaceAllString(upToDollar, "*"+strconv.FormatInt(int64(newNum), 36)) + fromDollar
+	a := rgx.FindStringSubmatch(upToDollar)
+	q.Q(a)
+	relStr := ""
+	for _, aa := range a {
+		oldNum, _ := strconv.ParseInt(aa, 36, 32)
+		pair := oldPool.GetAttrib(int(oldNum))
+		// TODO if(!pair) exports.error('Can\'t copy unknown attrib (reference attrib string to non-existant pool entry). Inconsistent attrib state!');
+		newNum := newPool.PutAttrib(pair, false)
+		q.Q(pair)
+		relStr = rgx.ReplaceAllString(upToDollar, "*"+strconv.FormatInt(int64(newNum), 36))
+	}
+	return relStr + fromDollar
 }
 
 /**
@@ -959,7 +965,8 @@ func appendATextToAssembler() {
  */
 func PrepareForWire(cs string, pool AttributePool) (translated string, newPool AttributePool) {
 	newPool = NewAttributePool()
-	translated = moveOpsToNewPool(cs, pool, newPool)
+	translated = moveOpsToNewPool(cs, &pool, &newPool)
+	q.Q(pool, newPool)
 	return
 }
 

@@ -5,6 +5,7 @@ import (
 	"github.com/Michael2008S/etherpad4go/store"
 	"github.com/Michael2008S/etherpad4go/utils/changeset"
 	"github.com/jinzhu/copier"
+	"github.com/y0ssar1an/q"
 	"log"
 	"math"
 	"strconv"
@@ -57,7 +58,7 @@ type meta struct {
 
 func NewPad(id, text string, db store.Store) Pad {
 	p := Pad{Id: id, dbStore: db}
-	p.Pool = changeset.NewAttributePool()
+	//p.Pool = changeset.NewAttributePool()
 	p.Init(text)
 	return p
 }
@@ -83,6 +84,7 @@ func (p *Pad) Init(text string) {
 		if text == "" {
 			text = defaultPadText
 		}
+		p.Pool = changeset.NewAttributePool()
 		// this pad doesn't exist, so create it
 		cs := changeset.ChangeSet{}
 		firstChangeset := cs.MakeSplice("\n", 0, 0, CleanText(text), "", nil)
@@ -137,12 +139,13 @@ func (p *Pad) AppendRevision(aChangeset, author string) error {
 	}
 	jsonStr, _ := json.Marshal(newRevData)
 	p.dbStore.Set([]byte(PadKey+p.Id+PadRevisionKey+strconv.Itoa(newRev)), jsonStr, 0)
-	if len(author) > 0 {
-		p.apool().PutAttrib([]string{changeset.AttribKeyAuthor, author}, false)
-	}
 	p.saveToDatabase()
 
 	// TODO
+	//if (author) {
+	//	authorManager.addPad(author, this.id);
+	//}
+
 	//if (this.head == 0) {
 	//	hooks.callAll("padCreate", {'pad':this, 'Author': Author});
 	//} else {
@@ -153,6 +156,7 @@ func (p *Pad) AppendRevision(aChangeset, author string) error {
 
 func (p *Pad) saveToDatabase() {
 	jsonStr, _ := json.Marshal(p)
+	q.Q("saveToDatabase:", string(jsonStr))
 	p.dbStore.Set([]byte(PadKey+p.Id), jsonStr, 0)
 }
 
@@ -257,7 +261,9 @@ func (p *Pad) appendText(newText string) {
 	newText = CleanText(newText)
 	oldText := p.GetText()
 	chgset := changeset.ChangeSet{}
+	// create the changeset
 	cs := chgset.MakeSplice(oldText, len(oldText), 0, newText, "", nil)
+	// append the changeset
 	p.AppendRevision(cs, "")
 }
 
