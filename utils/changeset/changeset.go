@@ -844,16 +844,19 @@ func moveOpsToNewPool(cs string, oldPool, newPool *AttributePool) string {
 	fromDollar := SubStrLen(cs, dollarPos, len(cs)) // FIXME
 	// order of Attribs stays the same
 	rgx, _ := regexp.Compile(`\*([0-9a-z]+)`)
-	a := rgx.FindStringSubmatch(upToDollar)
-	q.Q(a)
+	arr := rgx.FindAllString(upToDollar, -1)
+	q.Q(arr)
 	relStr := ""
-	for _, aa := range a {
+	newNum := 0
+	relStr = rgx.ReplaceAllString(upToDollar, "*"+strconv.FormatInt(int64(newNum), 36))
+	rgx.replaceAllStr
+	for _, aa := range arr {
 		oldNum, _ := strconv.ParseInt(aa, 36, 32)
 		pair := oldPool.GetAttrib(int(oldNum))
 		// TODO if(!pair) exports.error('Can\'t copy unknown attrib (reference attrib string to non-existant pool entry). Inconsistent attrib state!');
-		newNum := newPool.PutAttrib(pair, false)
+		newNum = newPool.PutAttrib(pair, false)
 		q.Q(pair)
-		relStr = rgx.ReplaceAllString(upToDollar, "*"+strconv.FormatInt(int64(newNum), 36))
+		//relStr = rgx.ReplaceAllString(upToDollar, "*"+strconv.FormatInt(int64(newNum), 36))
 	}
 	return relStr + fromDollar
 }
@@ -966,7 +969,7 @@ func appendATextToAssembler() {
 func PrepareForWire(cs string, pool AttributePool) (translated string, newPool AttributePool) {
 	newPool = NewAttributePool()
 	translated = moveOpsToNewPool(cs, &pool, &newPool)
-	q.Q(pool, newPool)
+	q.Q(cs, pool, translated, newPool)
 	return
 }
 

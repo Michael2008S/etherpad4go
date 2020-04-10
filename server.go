@@ -209,7 +209,7 @@ func sendClientVars(hub *Hub, client *Client, db bgStore.Store) {
 	//atext.Text = "Welcome to Etherpad!\n\nThis pad text is synchronized~ https://github.com/ether/etherpad-lite\n\n"
 	translated, newPool := changeset.PrepareForWire(atext.Attribs, pad.Pool)
 
-	q.Q(atext.Attribs, translated, newPool)
+	//q.Q(atext.Attribs, translated, newPool)
 	//apool := newPool.ToJsonAble
 	atext.Attribs = translated
 
