@@ -860,15 +860,15 @@ func moveOpsToNewPool(cs string, oldPool, newPool *AttributePool) string {
 
 	relStr := rgx.ReplaceAllStringFunc(upToDollar, func(s string) string {
 		s = strings.TrimLeft(s, "*")
+		q.Q(s)
 		oldNum, _ := strconv.ParseInt(s, 36, 32)
-		pair,ok := oldPool.GetAttrib(int(oldNum))
-		if !ok{
-			log.Println(fmt.Sprintf("Can not GetAttrib: %d",oldNum))
+		pair, ok := oldPool.GetAttrib(int(oldNum))
+		if !ok {
+			log.Println(fmt.Sprintf("Can not GetAttrib: %d", oldNum))
 		}
 		newNum := newPool.PutAttrib(pair, false)
 		return "*" + strconv.FormatInt(int64(newNum), 36)
 	})
-
 	return relStr + fromDollar
 }
 
@@ -980,6 +980,8 @@ func appendATextToAssembler() {
 func PrepareForWire(cs string, pool AttributePool) (translated string, newPool AttributePool) {
 	newPool = NewAttributePool()
 	translated = moveOpsToNewPool(cs, &pool, &newPool)
+	q.Q(cs)
+	q.Q(translated)
 	q.Q(cs, pool, translated, newPool)
 	return
 }

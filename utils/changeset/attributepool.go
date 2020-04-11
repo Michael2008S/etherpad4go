@@ -1,7 +1,6 @@
 package changeset
 
 import (
-	"github.com/y0ssar1an/q"
 	"strings"
 )
 
@@ -43,7 +42,7 @@ func (a *AttributePool) PutAttrib(attrib []string, dontAddIfAbsent bool) int {
 	a.AttribToNum[attribToStr] = num
 	// FIXME  this.numToAttrib[num] = [String(attrib[0] || ''), String(attrib[1] || '')];
 	a.NumToAttrib[num] = attrib
-	q.Q("PutAttrib:", a)
+	//q.Q("PutAttrib:", a)
 	return num
 }
 

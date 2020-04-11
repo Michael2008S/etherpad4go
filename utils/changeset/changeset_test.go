@@ -95,7 +95,7 @@ func Test_moveOpsToNewPool(t *testing.T) {
 			"author,a.glqITynU8VYvF40s": 0,
 			"author,a.UaSfrktmubohgvYq": 1,
 		},
-		NextNum: 0,
+		NextNum: 2,
 	}
 	newPool := AttributePool{
 		NumToAttrib: map[int][]string{},
@@ -105,6 +105,35 @@ func Test_moveOpsToNewPool(t *testing.T) {
 	newCs := moveOpsToNewPool(cs, &oldPool, &newPool)
 
 	assert.Equal(t, "|1+l*0+2|2+1z*1+2|1+1", newCs)
+	log.Println(fmt.Sprintf("%+v", oldPool))
+	log.Println(fmt.Sprintf("%+v", newPool))
+}
+
+func Test_moveOpsToNewPool2(t *testing.T) {
+
+	cs := "|1+l*0+1*1+1|1+1+5*2+3|1+1q*0+1*1+3|1+1"
+
+	oldPool := AttributePool{
+		NumToAttrib: map[int][]string{
+			0: []string{"author", "a.glqITynU8VYvF40s"},
+			1: []string{"author", "a.UaSfrktmubohgvYq"},
+			2: []string{"strikethrough", "true"},
+		},
+		AttribToNum: map[string]int{
+			"author,a.glqITynU8VYvF40s": 0,
+			"author,a.UaSfrktmubohgvYq": 1,
+			"strikethrough,true":        2,
+		},
+		NextNum: 3,
+	}
+	newPool := AttributePool{
+		NumToAttrib: map[int][]string{},
+		AttribToNum: map[string]int{},
+		NextNum:     0,
+	}
+	newCs := moveOpsToNewPool(cs, &oldPool, &newPool)
+
+	assert.Equal(t, "|1+l*0+1*1+1|1+1+5*2+3|1+1q*0+1*1+3|1+1", newCs)
 	log.Println(fmt.Sprintf("%+v", oldPool))
 	log.Println(fmt.Sprintf("%+v", newPool))
 }
