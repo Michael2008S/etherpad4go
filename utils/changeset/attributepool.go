@@ -47,8 +47,9 @@ func (a *AttributePool) PutAttrib(attrib []string, dontAddIfAbsent bool) int {
 	return num
 }
 
-func (a *AttributePool) GetAttrib(num int) []string {
-	return a.NumToAttrib[num]
+func (a *AttributePool) GetAttrib(num int) ([]string, bool) {
+	val, ok := a.NumToAttrib[num]
+	return val, ok
 }
 
 func (a *AttributePool) GetAttribKey() {

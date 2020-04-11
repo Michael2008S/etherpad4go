@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/y0ssar1an/q"
+	"log"
 	"strings"
 	"testing"
 )
@@ -79,4 +80,31 @@ func CleanText(text string) string {
 	strings.Replace(text, "\t", "        ", 0)
 	strings.Replace(text, "\xa0", " ", 0)
 	return text
+}
+
+func Test_moveOpsToNewPool(t *testing.T) {
+
+	cs := "|1+l*1+2|2+1z*0+2|1+1"
+
+	oldPool := AttributePool{
+		NumToAttrib: map[int][]string{
+			0: []string{"author", "a.glqITynU8VYvF40s"},
+			1: []string{"author", "a.UaSfrktmubohgvYq"},
+		},
+		AttribToNum: map[string]int{
+			"author,a.glqITynU8VYvF40s": 0,
+			"author,a.UaSfrktmubohgvYq": 1,
+		},
+		NextNum: 0,
+	}
+	newPool := AttributePool{
+		NumToAttrib: map[int][]string{},
+		AttribToNum: map[string]int{},
+		NextNum:     0,
+	}
+	newCs := moveOpsToNewPool(cs, &oldPool, &newPool)
+
+	assert.Equal(t, "|1+l*0+2|2+1z*1+2|1+1", newCs)
+	log.Println(fmt.Sprintf("%+v", oldPool))
+	log.Println(fmt.Sprintf("%+v", newPool))
 }

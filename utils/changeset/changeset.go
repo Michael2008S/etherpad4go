@@ -844,20 +844,31 @@ func moveOpsToNewPool(cs string, oldPool, newPool *AttributePool) string {
 	fromDollar := SubStrLen(cs, dollarPos, len(cs)) // FIXME
 	// order of Attribs stays the same
 	rgx, _ := regexp.Compile(`\*([0-9a-z]+)`)
-	arr := rgx.FindAllString(upToDollar, -1)
-	q.Q(arr)
-	relStr := ""
-	newNum := 0
-	relStr = rgx.ReplaceAllString(upToDollar, "*"+strconv.FormatInt(int64(newNum), 36))
-	rgx.replaceAllStr
-	for _, aa := range arr {
-		oldNum, _ := strconv.ParseInt(aa, 36, 32)
-		pair := oldPool.GetAttrib(int(oldNum))
-		// TODO if(!pair) exports.error('Can\'t copy unknown attrib (reference attrib string to non-existant pool entry). Inconsistent attrib state!');
-		newNum = newPool.PutAttrib(pair, false)
-		q.Q(pair)
-		//relStr = rgx.ReplaceAllString(upToDollar, "*"+strconv.FormatInt(int64(newNum), 36))
-	}
+	//arr := rgx.FindAllString(upToDollar, -1)
+	//q.Q(arr)
+	//relStr := ""
+	//newNum := 0
+	//relStr = rgx.ReplaceAllString(upToDollar, "*"+strconv.FormatInt(int64(newNum), 36))
+	//for _, aa := range arr {
+	//	oldNum, _ := strconv.ParseInt(aa, 36, 32)
+	//	pair := oldPool.GetAttrib(int(oldNum))
+	//	// TODO if(!pair) exports.error('Can\'t copy unknown attrib (reference attrib string to non-existant pool entry). Inconsistent attrib state!');
+	//	newNum = newPool.PutAttrib(pair, false)
+	//	q.Q(pair)
+	//	//relStr = rgx.ReplaceAllString(upToDollar, "*"+strconv.FormatInt(int64(newNum), 36))
+	//}
+
+	relStr := rgx.ReplaceAllStringFunc(upToDollar, func(s string) string {
+		s = strings.TrimLeft(s, "*")
+		oldNum, _ := strconv.ParseInt(s, 36, 32)
+		pair,ok := oldPool.GetAttrib(int(oldNum))
+		if !ok{
+			log.Println(fmt.Sprintf("Can not GetAttrib: %d",oldNum))
+		}
+		newNum := newPool.PutAttrib(pair, false)
+		return "*" + strconv.FormatInt(int64(newNum), 36)
+	})
+
 	return relStr + fromDollar
 }
 

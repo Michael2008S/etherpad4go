@@ -1545,6 +1545,7 @@ exports.moveOpsToNewPool = function (cs, oldPool, newPool) {
   var fromDollar = cs.substring(dollarPos);
   // order of attribs stays the same
   return upToDollar.replace(/\*([0-9a-z]+)/g, function (_, a) {
+    console.log(a);
     var oldNum = exports.parseNum(a);
     var pair = oldPool.getAttrib(oldNum);
     if(!pair) exports.error('Can\'t copy unknown attrib (reference attrib string to non-existant pool entry). Inconsistent attrib state!');
